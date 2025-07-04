@@ -1,0 +1,33 @@
+.side {
+    nav.MuiList-root {
+        padding: 16px;
+    }
+    .MuiList-root {
+        padding: 0;
+        a {
+            color: $paragragh-color;
+            &:hover {
+                text-decoration: none;
+            }
+        }
+        .MuiListItemButton-root.active {
+            background-color: $hover-primary;
+        }
+        .MuiListItemButton-root {
+            border-radius: 8px;
+            margin-bottom: 4px;
+            &:hover {
+                background-color: $hover-primary;
+            }
+            .MuiListItemIcon-root {
+                min-width: 42px;
+            }
+            .MuiListItemText-root {
+                span {
+                    font-size: 14px;
+                    color: #2A3941;
+                }
+            }
+        }
+    }
+}

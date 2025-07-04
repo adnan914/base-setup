@@ -1,0 +1,84 @@
+#dropdown-basic {
+    &::after {
+        display: none;
+    }
+}
+.header {
+    background-color: $bg-secondry-color;
+    display: flex;
+    flex-wrap: nowrap;
+    position: sticky;
+    width: 100%;
+    left: 0;
+    top: 0;
+    z-index: 999;
+    .header_logo {
+        width: 260px;
+        display: flex;
+        justify-content: space-between;
+        padding: 9px 24px;
+        align-items: center;
+        .logo {
+            width: 85px;
+            img {
+                width: 100%;
+            }
+        }
+        .header_menu {
+            button {
+                padding: 0 !important;
+                width: 34px;
+                height: 34px;
+                min-width: 34px !important;
+                border-radius: 8px;
+                background: $hover-primary;
+                color: $hover-secondry;
+                &:hover {
+                    background: $hover-secondry;
+                    color: $hover-primary;
+                }
+            }
+        }        
+    }
+    .header_bar {
+        width: calc(100% - 260px);
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 9px 24px;
+        .toggle_btn {
+            background: $bg-secondry-color;
+            color: $paragragh-color;
+            padding: 0;
+            border: 0;
+            &:hover {
+                background: $bg-secondry-color;
+                color: $paragragh-color;
+            }
+            &:focus {
+                box-shadow: none !important;
+            }
+            &:active {
+                background: $bg-secondry-color;
+                box-shadow: none;
+            }
+            .header_drop {
+                color: #2A3941;
+                font-size: 14px;
+                line-height: 40px;
+                span {
+                    display: inline-block;
+                    width: 40px;
+                    height: 40px;
+                    color: #ffffff;
+                    background: #1D2858;
+                    border-radius: 5px;
+                    font-size: 14px;
+                    text-transform: uppercase;
+                    text-align: center;
+                    margin-right: 13px;
+                }
+            }
+        }
+    }
+}
