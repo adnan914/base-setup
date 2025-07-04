@@ -16,10 +16,8 @@ build/
 out/
 
 # Environment variables
-.env
-.env.*.local
-.env.*.development
-.env.*.dev
+.env*
+**/.env*
 
 # IDEs and editors
 .vscode/
