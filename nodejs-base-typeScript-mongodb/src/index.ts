@@ -4,7 +4,7 @@ import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { Database } from "./db/connection";
 import { Routes } from "./routes";
-import { limiter } from "./middleware/rate.limiting.middleware";
+import { globalLimiter } from "./middleware/rate.limiting.middleware";
 import { ResMessageUtil } from './utils';
 import helmet from 'helmet';
 
@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 app.use(cors());
-app.use(limiter);
+app.use(globalLimiter);
 app.use(helmet());
 app.options("*", cors());
 

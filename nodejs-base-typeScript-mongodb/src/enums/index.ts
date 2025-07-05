@@ -1,3 +1,4 @@
 export enum TokenType {
-  REFRESH = "REFRESH"
+  REFRESH = "REFRESH",
+  FORGOTPASSWORD = "FORGOTPASSWORD" 
 }

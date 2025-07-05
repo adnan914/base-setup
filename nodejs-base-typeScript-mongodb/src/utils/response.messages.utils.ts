@@ -7,6 +7,7 @@ export class ResMessageUtil {
   static readonly INVALID_TOKEN = "Invalid token";
   static readonly INVALID_TOKEN_OR_USED = "Invalid token or already used";
   static readonly INVALID_CRED = "Invalid credentials";
+  static readonly INVALID_MAIL = "Invalid email id";
   static readonly NOT_PROVIDED_TOKEN = "Token not provded";
   static readonly INVALID_ID = "Invalid user id";
   static readonly SERVER_ERROR = "There was an error";
@@ -16,4 +17,6 @@ export class ResMessageUtil {
   static readonly TOKEN_NOT_PROVIDED = "Token not provided!";
   static readonly SOMETHING_WENT_WRONG = "Something went wrong";
   static readonly TOO_MANY_REQUEST = "Too many requests from this IP, please try again after 15 minutes";
+  static readonly REST_LINK_MAIL_SENT = "Reset link sent to your email.";
+  static readonly PASS_RESET_SUCC = "Password reset successfully.";
 }

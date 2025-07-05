@@ -17,15 +17,29 @@ import { ResMessageUtil } from '../utils';
 // redisClient.connect();
 
 // Set up rate limiter: maximum of 100 requests per 15 minutes per IP
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-  message: ResMessageUtil.TOO_MANY_REQUEST,
-  standardHeaders: true,
-  // store: new RedisStore({
-  //   sendCommand: (...args) => redisClient.sendCommand(args),
-  // }),
-});
+
+const createRateLimiter = (
+  windowMs: number,
+  max: number,
+  message = ResMessageUtil.TOO_MANY_REQUEST
+) =>
+  rateLimit({
+    windowMs,
+    max,
+    message,
+    standardHeaders: true,
+    legacyHeaders: false,
+    // store: new RedisStore({
+    //   sendCommand: (...args) => redisClient.sendCommand(args),
+    // }),
+  });
+
+
+// Global soft limiter
+const globalLimiter = createRateLimiter(15 * 60 * 1000, 1000);
+
+// Route-specific strict limiters
+const authLimiter = createRateLimiter(15 * 60 * 1000, 1000);
 
 // export { redisClient, limiter };
-export { limiter };
+export { globalLimiter, authLimiter };

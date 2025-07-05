@@ -1,6 +1,6 @@
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import { ResMessageUtil } from '../utils';
+import { ResMessageUtil  } from '../utils';
 import { TokenType } from '../enums';
 import UserModel from '../models/users.model';
 
@@ -33,12 +33,17 @@ const verifyToken = (req: Request, res: Response, next: NextFunction): any => {
         req.body.token = token;
     }
 
+    if (req.body.tokenType === TokenType.FORGOTPASSWORD) {
+        secret = process.env.JWT_FORGOT_PASSOWRD_SECRET as string;
+        req.body.token = token;
+    }
+
     jwt.verify(token, secret as string, async (err: any, userData: any) => {
         if (err) {
             return res.status(403).json({ status: false, msg: ResMessageUtil.INVALID_TOKEN });
         }
-        const isEmailExist = await UserModel.findOne({ _id: userData._id });
-        if (!isEmailExist) {
+        const user = await UserModel.findOne({ _id: userData._id });
+        if (!user) {
             return res.status(403).json({ status: false, msg: ResMessageUtil.INVALID_TOKEN });
         }
 
