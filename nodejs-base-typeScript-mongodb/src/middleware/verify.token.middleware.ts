@@ -2,8 +2,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { ResMessageUtil } from '../utils';
 import { TokenType } from '../enums';
-import UserModel, { IUser } from '../models/users.model';
-import RefreshTokenModel from '../models/refresh.token.model';
+import UserModel from '../models/users.model';
 
 interface UserData extends JwtPayload {
     // Add any specific user properties expected in the token, for example:

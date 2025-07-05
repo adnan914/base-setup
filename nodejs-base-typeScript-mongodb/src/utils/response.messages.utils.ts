@@ -15,4 +15,5 @@ export class ResMessageUtil {
   static readonly EMAIL_EXIST = "Email already exists, choose another email!";
   static readonly TOKEN_NOT_PROVIDED = "Token not provided!";
   static readonly SOMETHING_WENT_WRONG = "Something went wrong";
+  static readonly TOO_MANY_REQUEST = "Too many requests from this IP, please try again after 15 minutes";
 }
