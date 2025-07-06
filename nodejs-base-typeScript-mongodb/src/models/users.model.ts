@@ -5,6 +5,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   phone: number;
+  profileImg: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -14,6 +15,7 @@ const UserSchema: Schema<IUser> = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true, select: false },  // required: true for clarity
   phone: { type: Number, required: true, unique: true },
+  profileImg: { type: String, default: null },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now }
 });

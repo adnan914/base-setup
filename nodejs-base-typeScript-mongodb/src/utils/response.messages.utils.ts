@@ -13,10 +13,12 @@ export class ResMessageUtil {
   static readonly SERVER_ERROR = "There was an error";
   static readonly DATA_FOUND = "Data found";
   static readonly DATA_NOT_FOUND = "Data not found";
+  static readonly USER_NOT_FOUND = "User not found";
   static readonly EMAIL_EXIST = "Email already exists, choose another email!";
   static readonly TOKEN_NOT_PROVIDED = "Token not provided!";
   static readonly SOMETHING_WENT_WRONG = "Something went wrong";
   static readonly TOO_MANY_REQUEST = "Too many requests from this IP, please try again after 15 minutes";
   static readonly REST_LINK_MAIL_SENT = "Reset link sent to your email.";
   static readonly PASS_RESET_SUCC = "Password reset successfully.";
+  static readonly PROFILE_UPDATE_SUCC = "Profile update successfully.";
 }

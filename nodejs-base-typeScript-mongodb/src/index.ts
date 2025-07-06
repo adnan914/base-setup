@@ -7,6 +7,7 @@ import { Routes } from "./routes";
 import { globalLimiter } from "./middleware/rate.limiting.middleware";
 import { ResMessageUtil } from './utils';
 import helmet from 'helmet';
+import path from 'path';
 
 const app = express();
 
@@ -14,7 +15,7 @@ const app = express();
 // Here we are applying the rate limiter to all requests, We can also create custom rate limiting middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(path.join(__dirname, '../public')));
 app.use(cors());
 app.use(globalLimiter);
 app.use(helmet());
