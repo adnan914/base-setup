@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import bcryptjs from 'bcryptjs';
-import UserModel from '../models/users.model';
+import UserModel, { User } from '../models/users.model';
 import TokenModel from '../models/token.model';
 import { TokenType } from '../enums';
 import { ResMessageUtil, CommonUtils, NodemailerUtils } from '../utils';
@@ -15,7 +15,7 @@ class AuthController {
                 return;
             }
 
-            const user = await UserModel.findOne({ email: req.userData?.email });
+            const user: User | null = await UserModel.findOne({ email: req.userData?.email });
             if (!user) {
                 res.status(401).json({ success: false, message: ResMessageUtil.INVALID_TOKEN });
                 return;
@@ -50,7 +50,7 @@ class AuthController {
                 return;
             }
 
-            const user = await UserModel.findOne({ _id: req.userData?._id });
+            const user: User | null = await UserModel.findOne({ _id: req.userData?._id });
 
             if (!user) {
                 res.status(401).json({ success: false, message: ResMessageUtil.INVALID_TOKEN });
@@ -106,7 +106,7 @@ class AuthController {
                 return;
             }
 
-            const user = await UserModel.findOne({ email: req.userData?.email });
+            const user: User | null = await UserModel.findOne({ email: req.userData?.email });
             if (!user) {
                 res.status(401).json({ success: false, message: ResMessageUtil.INVALID_TOKEN });
                 return;

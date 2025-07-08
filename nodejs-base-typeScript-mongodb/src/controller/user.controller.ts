@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
 import bcryptjs from 'bcryptjs';
-import UserModel from '../models/users.model';
+import UserModel, { User } from '../models/users.model';
 import TokenModel from '../models/token.model';
 import { TokenType } from '../enums';
 import { ResMessageUtil, CommonUtils } from '../utils';
 
 class UserController {
-    // Create a new user
     public async createUser(req: Request, res: Response): Promise<void> {
         try {
             const user = await UserModel.findOne({ email: req.body.email });
@@ -16,7 +15,7 @@ class UserController {
             }
             req.body.password = await bcryptjs.hash(req.body.password, 10);
 
-            const data = await UserModel.create(req.body);
+            const data: User = await UserModel.create(req.body);
             res.status(201).json({ success: true, message: ResMessageUtil.USER_CREATE, data });
         } catch (error: any) {
             res.status(500).json({ success: false, message: ResMessageUtil.SERVER_ERROR, error: error.message });
@@ -27,13 +26,13 @@ class UserController {
     public async updateProfile(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const user = await UserModel.findOne({ _id: id });
+            const user: User | null = await UserModel.findOne({ _id: id });
             if (!user) {
                 res.status(404).json({ success: false, message: ResMessageUtil.USER_NOT_FOUND });
                 return;
             }
             if (req.file) req.body.profileImg = req.file.filename;
-            const data = await UserModel.findOneAndUpdate({ _id: id }, { $set: req.body }, { new: true });
+            const data: User | null = await UserModel.findOneAndUpdate({ _id: id }, { $set: req.body }, { new: true });
 
             res.status(201).json({ success: true, message: ResMessageUtil.PROFILE_UPDATE_SUCC, data });
         } catch (error: any) {
@@ -44,8 +43,7 @@ class UserController {
     // User login
     public async loginUser(req: Request, res: Response): Promise<void> {
         try {
-            const user = await UserModel.findOne({ email: req.body.email }).select('+password');
-
+            const user: User | null = await UserModel.findOne({ email: req.body.email }).select('+password');
             if (!user) {
                 res.status(401).json({ success: false, message: ResMessageUtil.INVALID_CRED });
                 return;
@@ -80,7 +78,7 @@ class UserController {
 
     public async userList(req: Request, res: Response): Promise<void> {
         try {
-            const data = await UserModel.find();
+            const data: User[] = await UserModel.find();
             res.status(201).json({ success: true, message: ResMessageUtil.DATA_FOUND, data });
         } catch (error: any) {
             res.status(500).json({ success: false, message: ResMessageUtil.SERVER_ERROR, error: error.message });
