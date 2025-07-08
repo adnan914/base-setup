@@ -14,7 +14,7 @@ const UserSchema: Schema<IUser> = new Schema({
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true, select: false },  // required: true for clarity
-  phone: { type: Number, required: true, unique: true },
+  phone: { type: Number, unique: true },
   profileImg: { type: String, default: null },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now }

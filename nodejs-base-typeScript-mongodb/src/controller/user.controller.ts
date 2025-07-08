@@ -5,7 +5,7 @@ import TokenModel from '../models/token.model';
 import { TokenType } from '../enums';
 import { ResMessageUtil, CommonUtils } from '../utils';
 
-class AuthController {
+class UserController {
     // Create a new user
     public async createUser(req: Request, res: Response): Promise<void> {
         try {
@@ -89,4 +89,4 @@ class AuthController {
 
 }
 
-export default new AuthController();
+export default new UserController();

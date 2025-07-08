@@ -21,4 +21,5 @@ export class ResMessageUtil {
   static readonly REST_LINK_MAIL_SENT = "Reset link sent to your email.";
   static readonly PASS_RESET_SUCC = "Password reset successfully.";
   static readonly PROFILE_UPDATE_SUCC = "Profile update successfully.";
+  static readonly INVALID_SCHEMA_TYPE= "Invalid schema type"
 }

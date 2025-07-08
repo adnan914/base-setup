@@ -1,4 +1,10 @@
 export enum TokenType {
   REFRESH = "REFRESH",
-  FORGOTPASSWORD = "FORGOTPASSWORD" 
+  FORGOTPASSWORD = "FORGOTPASSWORD"
+}
+
+export enum JoiValidateType {
+  BODY = "BODY",
+  QUERY = "QUERY",
+  PARAM = "PARAM"
 }
