@@ -4,7 +4,7 @@ import { MessageUtil } from '../utils';
 
 export const globalErrorHandler = (
   err: any,
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {
