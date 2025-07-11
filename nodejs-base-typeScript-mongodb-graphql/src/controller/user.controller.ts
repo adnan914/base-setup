@@ -43,9 +43,8 @@ class UserController {
         if (!user) throw new GraphQLError(MessageUtil.INVALID_CRED);
 
         const { _id, password, email } = user;
-        if (!password) throw new GraphQLError(MessageUtil.INVALID_CRED);
 
-        const isPasswordMatch = await bcryptjs.compare(inputPassword, password);
+        const isPasswordMatch = await bcryptjs.compare(inputPassword, password as string);
         if (!isPasswordMatch) throw new GraphQLError(MessageUtil.INVALID_CRED);
 
         // Generate JWT token and refresh token
@@ -57,13 +56,16 @@ class UserController {
             { userId: _id, token: accessToken, type: TokenType.ACCESS },
             { userId: _id, token: refreshToken, type: TokenType.REFRESH }
         ]);
+
+        user.accessToken = accessToken;
+        user.refreshToken = refreshToken;
+        
         ctx.res
             .cookie('accessToken', accessToken, { httpOnly: true, secure: true, maxAge: 1 * 60 * 60 * 1000 })
             .cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000 })
-        // console.log({ ...user, accessToken, refreshToken })
-        user.accessToken = accessToken;
-        user.refreshToken = refreshToken;
-        return { success: true, message: MessageUtil.LOGIN, data: user }
+
+        
+        return { success: true, message: MessageUtil.LOGIN, data: user };
     };
 
     public async logOut(ctx: GraphQLContext): Promise<Response<void>> {

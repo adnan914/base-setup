@@ -1,5 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import { ResMessageUtil } from '../utils';
+import { MessageUtil } from '../utils';
 // import RedisStore from 'rate-limit-redis';
 // import { createClient } from 'redis';
 
@@ -21,7 +21,7 @@ import { ResMessageUtil } from '../utils';
 const createRateLimiter = (
   windowMs: number,
   max: number,
-  message = ResMessageUtil.TOO_MANY_REQUEST
+  message = MessageUtil.TOO_MANY_REQUEST
 ) =>
   rateLimit({
     windowMs,

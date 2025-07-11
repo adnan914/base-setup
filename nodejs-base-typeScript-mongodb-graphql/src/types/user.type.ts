@@ -21,7 +21,6 @@ export interface UserDocument extends Document {
 }
 
 export interface UpdateUserInput {
-    id: Types.ObjectId;
     username: string;
     phone?: string;
 }

@@ -1,23 +1,19 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
+import { UserDocument } from '../types/user.type';
 
-export interface User extends Document {
-  username: string;
-  email: string;
-  password: string;
-  phone: number;
-  profileImg: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-const UserSchema: Schema<User> = new Schema({
+const UserSchema: Schema<UserDocument> = new Schema({
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true, select: false },  // required: true for clarity
-  phone: { type: Number, unique: true },
+  phone: { type: String, required: true, unique: true },
   profileImg: { type: String, default: null },
-  created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now }
+  // createdAt: { type: Date, default: Date.now }, timestamps: true will create createdAt and updatedAt fields 
+  // updatedAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+UserSchema.pre(['updateMany', 'updateOne', 'findOneAndUpdate'], function (next) {
+  this.set({ updatedAt: new Date() });
+  next();
 });
 
 UserSchema.set('toJSON', {
@@ -27,4 +23,4 @@ UserSchema.set('toJSON', {
   }
 });
 
-export default mongoose.model<User>('users', UserSchema);
+export default mongoose.model<UserDocument>('users', UserSchema);

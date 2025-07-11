@@ -22,6 +22,11 @@ class AuthController {
             { userId: _id, token: accessToken, type: TokenType.ACCESS },
             { userId: _id, token: refreshToken, type: TokenType.REFRESH }
         ]);
+
+        ctx.res
+            .cookie('accessToken', accessToken, { httpOnly: true, secure: true, maxAge: 1 * 60 * 60 * 1000 })
+            .cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000 })
+
         return { success: true, message: MessageUtil.TOKEN_GENERATED, data: { accessToken, refreshToken } };
 
     }

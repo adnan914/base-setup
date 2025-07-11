@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { Request, Response, NextFunction } from 'express';
 import { JoiValidateType } from '../enums';
-import { ResMessageUtil } from '../utils';
+import { MessageUtil } from '../utils';
 
 export const validateSchema = (schema: Joi.Schema, schemaType: string) => {
     return (req: Request, res: Response, next: NextFunction): void => {
@@ -19,7 +19,7 @@ export const validateSchema = (schema: Joi.Schema, schemaType: string) => {
                 dataToValidate = req.params;
                 break;
             default:
-                res.status(500).json({ message: ResMessageUtil.INVALID_SCHEMA_TYPE });
+                res.status(500).json({ message: MessageUtil.INVALID_SCHEMA_TYPE });
                 return;
         }
 

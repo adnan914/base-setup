@@ -33,18 +33,16 @@ const checkAuthorization = async (context: any) => {
     return token;
 }
 
-export const verifyToken = (expectedType = TokenType.ACCESS) => {
+export const verifyToken = (type = TokenType.ACCESS) => {
     return async (resolve: any, root: any, args: any, context: GraphQLContext, info: any) => {
 
         const token = await checkAuthorization(context);
-        const secret = getSecretByTokenType(expectedType);
+        const secret = getSecretByTokenType(type);
 
         const decoded = jwt.verify(token, secret) as UserDecoded;
 
         if (!decoded) throw new GraphQLError(MessageUtil.INVALID_TOKEN);
         context.user = decoded;
         return await resolve(root, args, context, info);
-
-
     }
 };

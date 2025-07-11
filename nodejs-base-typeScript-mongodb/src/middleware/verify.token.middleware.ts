@@ -1,55 +1,55 @@
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import { ResMessageUtil } from '../utils';
+import { MessageUtil } from '../utils';
 import { TokenType } from '../enums';
-import UserModel, { User } from '../models/users.model';
+import TokenModel from '../models/token.model'; '../models/token.model';
+import { AuthenticatedRequest, TokenDocument, UserDecoded } from '../types';
 
-interface UserData extends JwtPayload {
-    // Add any specific user properties expected in the token, for example:
-    userId: string;
-    role: string;
-}
 
-// Extend the Express Request interface to include 'userData'
-declare global {
-    namespace Express {
-        interface Request {
-            userData?: UserData;
-        }
-    }
-}
-
-const verifyToken = (req: Request, res: Response, next: NextFunction): any => {
-
-    const token: string = req.headers['authorization']?.split(' ')[1]!;
-    if (!token) {
-        return res.status(401).json({ status: false, msg: ResMessageUtil.NOT_PROVIDED_TOKEN });
-    }
-    let secret = process.env.JWT_SECRET as string;
-
-    if (req.body.tokenType === TokenType.REFRESH) secret = process.env.JWT_REFRESH_SECRET as string;
-
-    if (req.body.tokenType === TokenType.FORGOTPASSWORD) secret = process.env.JWT_FORGOT_PASSOWRD_SECRET as string;
-
-    const decoded: any = jwt.verify(token, secret);
-
-    if (!decoded) return res.status(403).json({ status: false, msg: ResMessageUtil.INVALID_TOKEN });
-
-    req.userData = decoded;
-    next(); // Proceed to the next middleware
-
-    // jwt.verify(token, secret as string, async (err: any, userData: any) => {
-    //     if (err) {
-    //         return res.status(403).json({ status: false, msg: ResMessageUtil.INVALID_TOKEN });
-    //     }
-    //     const user: User | null = await UserModel.findOne({ _id: userData._id });
-    //     if (!user) {
-    //         return res.status(403).json({ status: false, msg: ResMessageUtil.INVALID_TOKEN });
-    //     }
-
-    //     req.userData = userData;
-    //     next(); // Proceed to the next middleware
-    // });
+const tokenExist = async (token: string) => {
+    if (!token) throw new Error(MessageUtil.NOT_PROVIDED_TOKEN);
+    const storedToken: TokenDocument | null = await TokenModel.findOne({ token });
+    if (!storedToken) throw new Error(MessageUtil.INVALID_TOKEN_OR_USED);
 };
 
-export { verifyToken };
+const getSecretByTokenType = (tokenType: TokenType): string => {
+    switch (tokenType) {
+        case TokenType.ACCESS:
+            return process.env.JWT_SECRET!;
+        case TokenType.REFRESH:
+            return process.env.JWT_REFRESH_SECRET!;
+        case TokenType.FORGOTPASSWORD:
+            return process.env.JWT_FORGOT_PASSWORD_SECRET!;
+        default:
+            throw new Error(MessageUtil.INVALID_TOKEN);
+    }
+};
+
+const checkAuthorization = async (headers: any) => {
+    const authHeader: string = headers['authorization']?.split(' ')[1]!;
+    if (!authHeader) throw new Error(MessageUtil.AUTHORIZATION_MISSING);
+
+    const token: string = authHeader.split(' ')[1];
+    await tokenExist(token);
+    return token;
+}
+
+export const verifyToken = (type = TokenType.ACCESS) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
+
+        try {
+            const token = await checkAuthorization(req.headers);
+            const secret = getSecretByTokenType(type);
+
+            const decoded = jwt.verify(token, secret) as UserDecoded;
+
+            if (!decoded) throw new Error(MessageUtil.INVALID_TOKEN);
+            (req as AuthenticatedRequest).user = decoded;
+
+            next();
+
+        } catch (error) {
+            res.json({ status: false, message: MessageUtil.INVALID_TOKEN });
+        }
+    }
+};
