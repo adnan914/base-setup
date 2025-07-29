@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
-import { MessageUtil } from '../utils';
-import { TokenType } from '../enums';
 import { GraphQLError } from 'graphql';
-import TokenModel from '../models/token.model';
-import { GraphQLContext, TokenDocument, UserDecoded } from '../types';
+import { MessageUtil } from '@/utils';
+import { TokenType } from '@/enums';
+import TokenModel from '@/models/token.model';
+import { GraphQLContext, TokenDocument, UserDecoded } from '@/types';
 
 const tokenExist = async (token: string) => {
     if (!token) throw new GraphQLError(MessageUtil.NOT_PROVIDED_TOKEN);

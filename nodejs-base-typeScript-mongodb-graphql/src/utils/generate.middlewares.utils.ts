@@ -1,4 +1,4 @@
-import { validateSchema } from '../middlewares/validate.joi.middleware';
+import { validateSchema } from '@/middlewares/validate.joi.middleware';
 
 export const generateMiddlewares = (config: any) => {
     const authVerify: any = {};

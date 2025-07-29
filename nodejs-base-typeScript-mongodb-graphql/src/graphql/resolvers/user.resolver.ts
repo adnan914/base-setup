@@ -1,6 +1,5 @@
-import { LoginInput, UpdateUserInput, CreateUserInput, Response, UserDocument, UserListInput } from '../../types';
-import { GraphQLContext } from '../../types';
-import userController from '../../controller/user.controller';
+import { LoginInput, UpdateUserInput, CreateUserInput, Response, UserDocument, UserListInput, GraphQLContext } from '@/types';
+import userController from '@/controller/user.controller';
 
 const userResolver = {
   Query: {

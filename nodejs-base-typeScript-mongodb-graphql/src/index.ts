@@ -1,3 +1,4 @@
+import 'module-alias/register';
 import { config } from 'dotenv';
 config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -11,10 +12,10 @@ import { expressMiddleware } from '@apollo/server/express4';
 import bodyParser from 'body-parser';
 import path from 'path';
 
-import { Database } from './db/connection';
-import { globalLimiter } from './middlewares/rate.limiting.middleware';
-import { MessageUtil } from './utils';
-import { schemaWithMiddleware } from './graphql/schema';
+import { Database } from '@/db/connection';
+import { globalLimiter } from '@/middlewares/rate.limiting.middleware';
+import { MessageUtil } from '@/utils';
+import { schemaWithMiddleware } from '@/graphql/schema';
 
 const app = express();
 // const httpServer = http.createServer(app);

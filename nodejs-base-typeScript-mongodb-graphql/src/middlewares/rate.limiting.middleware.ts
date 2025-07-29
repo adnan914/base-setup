@@ -1,5 +1,5 @@
 import rateLimit, { Options } from 'express-rate-limit';
-import { MessageUtil } from '../utils';
+import { MessageUtil } from '@/utils';
 import { NextFunction, Request, Response } from 'express';
 // import RedisStore from 'rate-limit-redis';
 // import { createClient } from 'redis';

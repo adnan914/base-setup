@@ -1,10 +1,11 @@
 import bcryptjs from 'bcryptjs';
-import UserModel from '../models/users.model';
-import TokenModel from '../models/token.model';
-import { TokenType } from '../enums';
-import { MessageUtil, CommonUtils, NodemailerUtils } from '../utils';
-import { UserDocument, Response, RefreshResponse, ResetInput, ForgotPassInput, GraphQLContext } from '../types';
+import UserModel from '@/models/users.model';
+import TokenModel from '@/models/token.model';
+import { TokenType } from '@/enums';
+import { MessageUtil, CommonUtils, NodemailerUtils } from '@/utils';
+import { UserDocument, Response, RefreshResponse, ResetInput, ForgotPassInput, GraphQLContext } from '@/types';
 import { GraphQLError } from 'graphql';
+import { StringValue } from 'ms';
 
 class AuthController {
 
@@ -14,8 +15,8 @@ class AuthController {
         const user: UserDocument | null = await UserModel.findOne({ email });
         if (!user) throw new GraphQLError(MessageUtil.INVALID_TOKEN);
 
-        const accessToken = CommonUtils.generateToken({ _id, email, tokenType: TokenType.ACCESS }, process.env.JWT_SECRET as string, { expiresIn: process.env.JWT_EXPIRATION });
-        const refreshToken = CommonUtils.generateToken({ _id, email, tokenType: TokenType.REFRESH }, process.env.JWT_REFRESH_SECRET as string, { expiresIn: process.env.JWT_REFRESH_EXPIRATION });
+        const accessToken = CommonUtils.generateToken({ _id, email, tokenType: TokenType.ACCESS }, process.env.JWT_SECRET as string, { expiresIn: process.env.JWT_EXPIRATION as StringValue });
+        const refreshToken = CommonUtils.generateToken({ _id, email, tokenType: TokenType.REFRESH }, process.env.JWT_REFRESH_SECRET as string, { expiresIn: process.env.JWT_REFRESH_EXPIRATION as StringValue });
 
         await TokenModel.deleteMany({ userId: _id });
         await TokenModel.insertMany([
@@ -38,7 +39,7 @@ class AuthController {
         if (!user) throw new GraphQLError(MessageUtil.INVALID_TOKEN);
 
         const { _id } = user;
-        const token = CommonUtils.generateToken({ _id, email, tokenType: TokenType.FORGOTPASSWORD }, process.env.JWT_FORGOT_PASSWORD_SECRET as string, { expiresIn: process.env.JWT_FORGOT_PASSWORD_EXPIRATION });
+        const token = CommonUtils.generateToken({ _id, email, tokenType: TokenType.FORGOTPASSWORD }, process.env.JWT_FORGOT_PASSWORD_SECRET as string, { expiresIn: process.env.JWT_FORGOT_PASSWORD_EXPIRATION as StringValue });
         await TokenModel.create({ userId: _id, token: token, type: TokenType.FORGOTPASSWORD });
 
         const resetLink = `${process.env.RESET_URL}${token}`;

@@ -1,11 +1,12 @@
 import bcryptjs from 'bcryptjs';
-import UserModel from '../models/users.model';
-import TokenModel from '../models/token.model';
-import { TokenType } from '../enums';
-import { MessageUtil, CommonUtils } from '../utils';
-import { Response, CreateUserInput, UserDocument, UpdateUserInput, LoginInput, GraphQLContext, UserListInput } from '../types';
+import UserModel from '@/models/users.model';
+import TokenModel from '@/models/token.model';
+import { TokenType } from '@/enums';
+import { MessageUtil, CommonUtils } from '@/utils';
+import { Response, CreateUserInput, UserDocument, UpdateUserInput, LoginInput, GraphQLContext, UserListInput } from '@/types';
 import mongoose from 'mongoose';
 import { GraphQLError } from 'graphql';
+import { StringValue } from 'ms';
 
 class UserController {
     // Create a new user
@@ -48,8 +49,8 @@ class UserController {
         if (!isPasswordMatch) throw new GraphQLError(MessageUtil.INVALID_CRED);
 
         // Generate JWT token and refresh token
-        const accessToken = CommonUtils.generateToken({ _id, email, tokenType: TokenType.ACCESS }, process.env.JWT_SECRET as string, { expiresIn: process.env.JWT_EXPIRATION });
-        const refreshToken = CommonUtils.generateToken({ _id, email, tokenType: TokenType.REFRESH }, process.env.JWT_REFRESH_SECRET as string, { expiresIn: process.env.JWT_REFRESH_EXPIRATION });
+        const accessToken = CommonUtils.generateToken({ _id, email, tokenType: TokenType.ACCESS }, process.env.JWT_SECRET as string, { expiresIn: process.env.JWT_EXPIRATION as StringValue });
+        const refreshToken = CommonUtils.generateToken({ _id, email, tokenType: TokenType.REFRESH }, process.env.JWT_REFRESH_SECRET as string, { expiresIn: process.env.JWT_REFRESH_EXPIRATION as StringValue});
 
         await TokenModel.deleteMany({ userId: _id });
         await TokenModel.insertMany([
@@ -59,12 +60,12 @@ class UserController {
 
         user.accessToken = accessToken;
         user.refreshToken = refreshToken;
-        
+
         ctx.res
             .cookie('accessToken', accessToken, { httpOnly: true, secure: true, maxAge: 1 * 60 * 60 * 1000 })
             .cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000 })
 
-        
+
         return { success: true, message: MessageUtil.LOGIN, data: user };
     };
 

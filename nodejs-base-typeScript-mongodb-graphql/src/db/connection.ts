@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { MessageUtil } from '../utils';
+import { MessageUtil } from '@/utils';
 export class Database {
     static init(db_url: string): void {
         if (!db_url) {

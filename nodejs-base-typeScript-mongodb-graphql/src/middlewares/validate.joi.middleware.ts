@@ -1,6 +1,6 @@
 import Joi from 'joi';
-import { MessageUtil } from '../utils';
 import { GraphQLError } from 'graphql';
+import { MessageUtil } from '@/utils';
 
 export const validateSchema = (schema: Joi.Schema) => {
     return async (resolve: any, root: any, args: any, context: any, info: any): Promise<any> => {

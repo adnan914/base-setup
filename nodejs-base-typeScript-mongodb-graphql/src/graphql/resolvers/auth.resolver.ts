@@ -1,6 +1,6 @@
 import { ResetInput, ForgotPassInput, Response, RefreshResponse } from '../../types';
-import { GraphQLContext } from '../../types';
-import authController from '../../controller/auth.controller';
+import { GraphQLContext } from '@/types';
+import authController from '@/controller/auth.controller';
 
 const authResolver = {
   Mutation: {

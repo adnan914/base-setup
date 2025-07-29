@@ -1,7 +1,7 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
+import { generateMiddlewares } from '@/utils/generate.middlewares.utils';
 import { applyMiddleware } from 'graphql-middleware';
 import { middlewareConfig } from './middleware.config';
-import { generateMiddlewares } from '../utils/generate.middlewares.utils';
 import resolvers from './resolvers';
 import typeDefs from './typedefs';
 

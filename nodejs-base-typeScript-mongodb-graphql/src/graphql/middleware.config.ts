@@ -1,7 +1,7 @@
-import { TokenType } from '../enums';
-import { loginSchema, createUserSchema, updateProfileSchema, forgotPasswordSchema, resetPasswordSchema, userList } from '../joi-schema';
-import { verifyToken } from '../middlewares/verify.token.middleware';
-import { authLimiter } from '../middlewares/rate.limiting.middleware';
+import { TokenType } from '@/enums';
+import { verifyToken } from '@/middlewares/verify.token.middleware';
+import { authLimiter } from '@/middlewares/rate.limiting.middleware';
+import { loginSchema, createUserSchema, updateProfileSchema, forgotPasswordSchema, resetPasswordSchema, userList } from '@/joi-schema';
 
 const getQuery = () => {
     const userQuery = {
