@@ -1,11 +1,11 @@
 import express, { Router } from 'express';
-import authController from '../controller/auth.controller';
-import { verifyToken } from '../middleware/verify.token.middleware';
-import { authLimiter, } from "../middleware/rate.limiting.middleware";
-import { validateSchema } from "../middleware/validate.joi.middleware";
-import { JoiValidateType, TokenType } from '../enums';
-import { forgotPasswordSchema, resetPasswordSchema } from '../joi-schema/auth.schema';
-import { catchAsync } from '../utils/catch.async.utils';
+import authController from '@/controller/auth.controller';
+import { verifyToken } from '@/middleware/verify.token.middleware';
+import { authLimiter, } from "@/middleware/rate.limiting.middleware";
+import { validateSchema } from "@/middleware/validate.joi.middleware";
+import { JoiValidateType, TokenType } from '@/enums';
+import { forgotPasswordSchema, resetPasswordSchema } from '@/joi-schema/auth.schema';
+import { catchAsync } from '@/utils/catch.async.utils';
 
 const routes: Router = express.Router();
 

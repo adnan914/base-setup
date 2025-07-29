@@ -1,6 +1,7 @@
 //typeorm decorater based
 {
   "compilerOptions": {
+    "rootDir": "src",
     "target": "ES6",
     "module": "commonjs",
     "strict": true,
@@ -10,7 +11,11 @@
     "strictPropertyInitialization": false,
     "outDir": "./dist",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+   "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": [
     "src/**/*"

@@ -1,11 +1,14 @@
 import mongoose, { Schema } from 'mongoose';
-import { UserDocument } from '../types/user.type';
+import { UserDocument } from '@/types/user.type';
+import { Role, Status } from '@/enums';
 
 const UserSchema: Schema<UserDocument> = new Schema({
-  username: { type: String, required: true },
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true, select: false },  // required: true for clarity
-  phone: { type: String, required: true, unique: true },
+  role: { type: String, enum: Role, required: true },
+  status: { type: String, enum: Status, default: Status.ACTIVE },
   profileImg: { type: String, default: null },
   // createdAt: { type: Date, default: Date.now }, timestamps: true will create createdAt and updatedAt fields 
   // updatedAt: { type: Date, default: Date.now }

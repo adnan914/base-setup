@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { Request, Response, NextFunction } from 'express';
-import { JoiValidateType } from '../enums';
-import { MessageUtil } from '../utils';
+import { JoiValidateType } from '@/enums';
+import { MessageUtil } from '@/utils';
 
 export const validateSchema = (schema: Joi.Schema, schemaType: string) => {
     return (req: Request, res: Response, next: NextFunction): void => {

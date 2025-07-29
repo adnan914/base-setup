@@ -9,3 +9,13 @@ export enum JoiValidateType {
   QUERY = "QUERY",
   PARAM = "PARAM"
 }
+
+export enum Role {
+  ADMIN = "Admin",
+  USER = "User"
+}
+
+export enum Status {
+  ACTIVE = "Active",
+  INACTIVE = "Inactive",
+}

@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { TokenType } from '../enums';
+import { TokenType } from '@/enums';
 
 const TokenSchema: Schema = new Schema({
   token: { type: String, required: true },

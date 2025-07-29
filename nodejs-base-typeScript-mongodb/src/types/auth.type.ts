@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { TokenType } from '../enums';
+import { TokenType } from '@/enums';
 import { Request } from 'express';
 
 export interface UserDecoded {

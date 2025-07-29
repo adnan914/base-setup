@@ -1,19 +1,22 @@
 import { Types, Document } from "mongoose";
+import { Role, Status } from "@/enums";
 
 export interface CreateUserInput {
-    username: string;
+    firstName: string;
+    lastName: string;
     email: string;
-    password: string;
-    phone?: number;
+    role: Role;
 }
 
 export interface UserDocument extends Document {
     _id: Types.ObjectId;
     email: string;
-    username: string;
+    firstName: string;
+    lastName: string;
     password?: string;
-    phone?: number;
     profileImg?: string;
+    role: Role;
+    status: Status;
     createdAt?: Date;
     updatedAt?: Date;
     accessToken?: string;
@@ -21,14 +24,14 @@ export interface UserDocument extends Document {
 }
 
 export interface UpdateUserInput {
-    username: string;
-    phone?: string;
+    usefirstName: string;
+    lastName: string;
+    role: Role;
 }
 
 export interface LoginInput {
     email: string;
     password: string;
-    test: string;
 }
 
 export interface UserListInput {

@@ -1,3 +1,4 @@
+import 'module-alias/register';
 import { config } from 'dotenv';
 config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -5,10 +6,10 @@ import cors from "cors";
 import express from "express";
 import helmet from 'helmet';
 import path from 'path';
-import { Database } from "./db/connection";
-import { Routes } from "./routes";
-import { globalLimiter } from "./middleware/rate.limiting.middleware";
-import { globalErrorHandler } from './middleware/error.handler.middleware';
+import { Database } from "@/db/connection";
+import { Routes } from "@/routes";
+import { globalLimiter } from "@/middleware/rate.limiting.middleware";
+import { globalErrorHandler } from '@/middleware/error.handler.middleware';
 
 const app = express();
 

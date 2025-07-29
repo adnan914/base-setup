@@ -1,15 +1,14 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import { MessageUtil } from '../utils';
-import { TokenType } from '../enums';
-import TokenModel from '../models/token.model'; '../models/token.model';
-import { AuthenticatedRequest, TokenDocument, UserDecoded } from '../types';
-
+import { AppError, MessageUtil, StatusUtil } from '@/utils';
+import { TokenType } from '@/enums';
+import TokenModel from '@/models/token.model';
+import { AuthenticatedRequest, TokenDocument, UserDecoded } from '@/types';
 
 const tokenExist = async (token: string) => {
-    if (!token) throw new Error(MessageUtil.NOT_PROVIDED_TOKEN);
+    if (!token) throw new AppError(MessageUtil.NOT_PROVIDED_TOKEN, StatusUtil.FORBIDDEN);
     const storedToken: TokenDocument | null = await TokenModel.findOne({ token });
-    if (!storedToken) throw new Error(MessageUtil.INVALID_TOKEN_OR_USED);
+    if (!storedToken) throw new AppError(MessageUtil.INVALID_TOKEN_OR_USED, StatusUtil.BAD_REQUEST);
 };
 
 const getSecretByTokenType = (tokenType: TokenType): string => {
@@ -21,13 +20,13 @@ const getSecretByTokenType = (tokenType: TokenType): string => {
         case TokenType.FORGOTPASSWORD:
             return process.env.JWT_FORGOT_PASSWORD_SECRET!;
         default:
-            throw new Error(MessageUtil.INVALID_TOKEN);
+            throw new AppError(MessageUtil.INVALID_TOKEN, StatusUtil.FORBIDDEN);
     }
 };
 
 const checkAuthorization = async (headers: any) => {
     const authHeader: string = headers['authorization']?.split(' ')[1]!;
-    if (!authHeader) throw new Error(MessageUtil.AUTHORIZATION_MISSING);
+    if (!authHeader) throw new AppError(MessageUtil.AUTHORIZATION_MISSING, StatusUtil.UNAUTHORIZED);
 
     const token: string = authHeader.split(' ')[1];
     await tokenExist(token);
@@ -43,7 +42,7 @@ export const verifyToken = (type = TokenType.ACCESS) => {
 
             const decoded = jwt.verify(token, secret) as UserDecoded;
 
-            if (!decoded) throw new Error(MessageUtil.INVALID_TOKEN);
+            if (!decoded) throw new AppError(MessageUtil.INVALID_TOKEN, StatusUtil.FORBIDDEN);
             (req as AuthenticatedRequest).user = decoded;
 
             next();

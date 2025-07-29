@@ -1,12 +1,12 @@
 import express, { Router } from 'express';
-import { verifyToken } from '../middleware/verify.token.middleware';
-import { authLimiter } from "../middleware/rate.limiting.middleware";
-import { uploadImage } from "../middleware/upload.middleware";
-import { validateSchema } from "../middleware/validate.joi.middleware";
-import { createUserSchema, loginSchema, updateProfileSchema } from '../joi-schema/user.schema';
-import { JoiValidateType } from '../enums';
-import userController from '../controller/user.controller';
-import { catchAsync } from '../utils/catch.async.utils';
+import { verifyToken } from '@/middleware/verify.token.middleware';
+import { authLimiter } from "@/middleware/rate.limiting.middleware";
+import { uploadImage } from "@/middleware/upload.middleware";
+import { validateSchema } from "@/middleware/validate.joi.middleware";
+import { createUserSchema, loginSchema, updateProfileSchema } from '@/joi-schema/user.schema';
+import { JoiValidateType } from '@/enums';
+import userController from '@/controller/user.controller';
+import { catchAsync } from '@/utils/catch.async.utils';
 
 const routes: Router = express.Router();
 
