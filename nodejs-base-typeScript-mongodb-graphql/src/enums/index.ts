@@ -3,3 +3,13 @@ export enum TokenType {
   REFRESH = "REFRESH",
   FORGOTPASSWORD = "FORGOTPASSWORD" 
 }
+
+export enum Role {
+  ADMIN = "Admin",
+  USER = "User"
+}
+
+export enum Status {
+  ACTIVE = "Active",
+  INACTIVE = "Inactive",
+}

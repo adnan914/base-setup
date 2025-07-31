@@ -24,7 +24,7 @@ export interface UserDocument extends Document {
 }
 
 export interface UpdateUserInput {
-    usefirstName: string;
+    firstName: string;
     lastName: string;
     role: Role;
 }

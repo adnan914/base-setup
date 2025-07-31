@@ -1,11 +1,11 @@
 import { TokenType } from '@/enums';
 import { verifyToken } from '@/middlewares/verify.token.middleware';
 import { authLimiter } from '@/middlewares/rate.limiting.middleware';
-import { loginSchema, createUserSchema, updateProfileSchema, forgotPasswordSchema, resetPasswordSchema, userList } from '@/joi-schema';
+import { loginSchema, createUserSchema, updateProfileSchema, forgotPasswordSchema, resetPasswordSchema, userListSchema } from '@/joi-schema';
 
 const getQuery = () => {
     const userQuery = {
-        users: { auth: verifyToken(), validate: userList }
+        users: { auth: verifyToken(), validate: userListSchema }
     }
 
     return { ...userQuery };
