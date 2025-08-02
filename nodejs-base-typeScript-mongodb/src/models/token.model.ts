@@ -7,13 +7,13 @@ const TokenSchema: Schema = new Schema({
   used: { type: Boolean, default: false },
   type: {
     type: String,
-    enum: [TokenType.REFRESH, TokenType.FORGOTPASSWORD],
+    enum: TokenType,
     required: true,
   },
   created_at: {
     type: Date,
     default: Date.now,
-    expires: process.env.JWT_REFRESH_EXPIRATION,
+    // expires: process.env.JWT_REFRESH_EXPIRATION,
   },
 });
 

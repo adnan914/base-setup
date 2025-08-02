@@ -12,7 +12,7 @@ const TokenSchema: Schema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: process.env.JWT_REFRESH_EXPIRATION,
+    // expires: process.env.JWT_REFRESH_EXPIRATION,
   },
 });
 
