@@ -35,7 +35,7 @@ app.options('*', cors());
 // app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 1 }));
 
 // Apollo Server (GraphQL-only)
-const startApolloServer = async () => {
+(async () => {
   const server = new ApolloServer({
     // typeDefs,
     // resolvers,
@@ -50,10 +50,9 @@ const startApolloServer = async () => {
   });
 
   await server.start();
-  app.use('/graphql', bodyParser.json() , globalLimiter, expressMiddleware(server, { context: async ({ req, res }) => ({ req, res }) }));
-};
+  app.use('/graphql', bodyParser.json(), globalLimiter, expressMiddleware(server, { context: async ({ req, res }) => ({ req, res }) }));
+})();
 
-startApolloServer();
 
 // Global error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

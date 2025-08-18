@@ -1,132 +1,128 @@
 import { Request, Response } from 'express';
 import bcryptjs from 'bcryptjs';
-import { AppDataSource } from '../config/typeorm';
-import { User } from '../entities/users/user.model';
-import { resMessage } from '../helpers/response.messages.helper';
-import { generateToken } from '../helpers/common.functions.helper';
+import { UserRepository, TokenRepository } from '@/repositories';
+import { TokenType } from '@/enums';
+import { MessageUtil, CommonUtils, StatusUtil, AppError } from '@/utils';
+import { AuthenticatedRequest, CreateUserInput, LoginInput, UpdateUserInput, UserListInput } from '../types';
+import { LessThan } from 'typeorm';
+import { StringValue } from 'ms';
 
 class UserController {
-    private user = AppDataSource.getRepository(User);
-    // Create a new user
+
+    // Create User
     public async createUser(req: Request, res: Response): Promise<void> {
-        try {
-            console.log('name', req.body);
-            // Check if email already exists
-            const isEmailExist = await this.user.findOne({ where: { email: req.body.email } });
+        const body: CreateUserInput = req.body;
+        const existingUser = await UserRepository.findOneBy({ email: body.email });
+        if (existingUser) throw new AppError(MessageUtil.EMAIL_EXIST, StatusUtil.CONFLICT);
 
-            // 409 Conflict
-            if (isEmailExist) {
-                res.status(409).json({ success: false, message: resMessage.EMAIL_EXIST });
-            }
+        const password = CommonUtils.generateRandomString(10);
+        const encryptedPassword = await bcryptjs.hash(password, 10);
+        const user = UserRepository.create({ ...body, password: encryptedPassword });
+        await UserRepository.save(user);
 
-            // Hash password before saving
-            req.body.password = await bcryptjs.hash(req.body.password, 10);
-
-            // Create user
-            const userDetails = await this.user.create(req.body);
-            // delete userDetails.password; // Exclude password from response
-
-            res.status(201).json({ success: true, message: resMessage.USER_CREATE, data: userDetails });
-        } catch (error: any) {
-            res.status(500).json({ success: false, message: resMessage.SERVER_ERROR, error: error.message });
-        }
+        res.status(StatusUtil.OK).json({ success: true, message: MessageUtil.USER_CREATE, data: user });
     }
 
-    // User login
+    // Update User Profile
+    public async updateProfile(req: Request, res: Response): Promise<void> {
+        const userId = (req as AuthenticatedRequest).user.id;
+        const body: UpdateUserInput = req.body;
+
+        if (req.file) req.body.profileImg = req.file.filename;
+
+        const user = await UserRepository.findOneBy({ id: userId });
+        if (!user) throw new AppError(MessageUtil.USER_NOT_FOUND, StatusUtil.NOT_FOUND);
+
+        Object.assign(user, body);
+        await UserRepository.save(user);
+
+        res.status(StatusUtil.OK).json({ success: true, message: MessageUtil.PROFILE_UPDATE_SUCC, data: user });
+    }
+
+    // User Login
     public async loginUser(req: Request, res: Response): Promise<void> {
-        try {
-            const isEmailExist: User | null = await this.user.findOne({ where: { email: req.body.email }, select: { password: true } });
+        const { email, password }: LoginInput = req.body;
 
-            // 401 Unauthorized
-            if (!isEmailExist) {
-                res.status(401).json({ success: false, message: resMessage.INVALID_CRED });
-            }
-            const password = isEmailExist?.password ?? '';
-            // Compare password
-            const isPasswordMatch = await bcryptjs.compare(req.body.password, password);
+        const user = await UserRepository.findOne({
+            where: { email },
+            select: ["id", "email", "password", "role", "status"]
+        });
 
-            // 401 Unauthorized if passwords don't match
-            if (!isPasswordMatch) {
-                res.status(401).json({ success: false, message: resMessage.INVALID_CRED });
-            }
+        if (!user) throw new AppError(MessageUtil.INVALID_CRED, StatusUtil.UNAUTHORIZED);
 
-            // Prepare user data
-            const userData = { ...isEmailExist };
-            delete userData.password;
+        const isPasswordMatch = await bcryptjs.compare(password, user.password!);
+        if (!isPasswordMatch) throw new AppError(MessageUtil.INVALID_CRED, StatusUtil.UNAUTHORIZED);
 
-            // Generate JWT token and refresh token
-            const token = generateToken(userData, process.env.JWT_SECRET as string, { expiresIn: process.env.JWT_EXPIRATION });
-            const refreshToken = generateToken(userData, process.env.JWT_SECRET as string, { expiresIn: process.env.JWT_REFRESH_EXPIRATION });
+        // Generate JWT tokens
+        const payload = { id: user.id, email: user.email };
+        const accessToken = CommonUtils.generateToken({ ...payload, tokenType: TokenType.ACCESS }, process.env.JWT_SECRET!, { expiresIn: process.env.JWT_EXPIRATION as StringValue });
+        const refreshToken = CommonUtils.generateToken({ ...payload, tokenType: TokenType.REFRESH }, process.env.JWT_REFRESH_SECRET!, { expiresIn: process.env.JWT_REFRESH_EXPIRATION as StringValue });
 
-            res.status(200).json({ success: true, message: resMessage.LOGIN, data: { ...userData, token, refreshToken } });
-        } catch (error: any) {
-            console.error(error);
-            res.status(500).json({ success: false, message: resMessage.LOGIN_FAILED, error: error.message });
-        }
+        // Delete old tokens
+        await TokenRepository.delete({ user: { id: user.id } });
+
+        // Save new tokens
+        const tokens = [
+            TokenRepository.create({ user, token: accessToken, type: TokenType.ACCESS, used: false }),
+            TokenRepository.create({ user, token: refreshToken, type: TokenType.REFRESH, used: false })
+        ];
+        await TokenRepository.save(tokens);
+
+        // Attach tokens to user object (runtime only)
+        (user as any).accessToken = accessToken;
+        (user as any).refreshToken = refreshToken;
+
+        // Send cookies & response
+        res
+            .cookie('accessToken', accessToken, { httpOnly: true, secure: true, maxAge: 1 * 60 * 60 * 1000 })
+            .cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000 })
+            .status(StatusUtil.OK)
+            .json({ success: true, message: MessageUtil.LOGIN, data: user });
     }
 
-    // Get list of all users
-    public async listUser(req: Request, res: Response): Promise<void> {
-        try {
-            const userList = await this.user.find()
-            res.status(200).json({ success: true, message: resMessage.DATA_FOUND, data: userList });
-        } catch (error: any) {
-            res.status(500).json({ success: false, message: resMessage.SERVER_ERROR, error: error.message });
-        }
+    // User Logout
+    public async logOut(req: Request, res: Response): Promise<void> {
+        const userId = (req as AuthenticatedRequest).user.id;
+
+        const user = await UserRepository.findOneBy({ id: userId });
+        if (!user) throw new AppError(MessageUtil.INVALID_TOKEN_OR_USED, StatusUtil.BAD_REQUEST);
+
+        await TokenRepository.delete({ user: { id: userId } });
+
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+
+        res.status(StatusUtil.OK).json({ success: true, message: MessageUtil.LOG_OUT });
     }
 
-    // Get user by ID
-    public async getUser(req: Request, res: Response): Promise<void> {
-        try {
-            const user = await this.user.findOne({ where: { id: Number(req.params.id) } });
+    // List Users with Pagination (lastSeenId)
+    public async userList(req: Request, res: Response): Promise<void> {
+        const { limit = 10, lastSeenId }: UserListInput = req.query as any;
 
-            // 404 Not Found
-            if (!user) {
-                res.status(404).json({ success: false, message: resMessage.NO_DATA_FOUND });
-            }
+        if (limit === 0) throw new AppError(MessageUtil.LIMIT_ZERO, StatusUtil.BAD_REQUEST);
 
-            res.status(200).json({ success: true, message: resMessage.DATA_FOUND, data: user });
-        } catch (error: any) {
-            res.status(500).json({ success: false, message: resMessage.SERVER_ERROR, error: error.message });
-        }
-    }
+        const whereCondition: any = {};
+        if (lastSeenId) whereCondition.id = LessThan(lastSeenId);
 
-    // Update user by ID
-    public async updateUser(req: Request, res: Response): Promise<void> {
-        try {
-            const user = await this.user.findOne({ where: { id: Number(req.params.id) } });
+        const users = await UserRepository.find({
+            where: whereCondition,
+            order: { id: 'ASC' },
+            take: limit + 1
+        });
 
-            // 404 Not Found
-            if (!user) {
-                res.status(404).json({ success: false, message: resMessage.INVALID_ID });
-            }
+        const hasNextPage = users.length > limit;
+        const paginatedUsers = hasNextPage ? users.slice(0, -1) : users;
+        const newLastSeenId = paginatedUsers[paginatedUsers.length - 1]?.id;
 
-            if (req.file) {
-                req.body.profileImg = req.file.filename;
-            }
+        const totalCount = await UserRepository.count();
 
-            await this.user.update({ id: Number(req.params.id) }, req.body);
-            res.status(200).json({ success: true, message: resMessage.UPDATE_SUCC });
-        } catch (error: any) {
-            res.status(500).json({ success: false, message: resMessage.UPDATE_FAILED, error: error.message });
-        }
-    }
-
-    // Delete user by ID
-    public async deleteUser(req: Request, res: Response): Promise<void> {
-        try {
-            const user = await this.user.findOne({ where: { id: Number(req.params.id) } });
-
-            // 404 Not Found
-            if (!user) {
-                res.status(404).json({ success: false, message: resMessage.INVALID_ID });
-            }
-
-            await this.user.delete({ id: Number(req.params.id) });
-            res.status(200).json({ success: true, message: resMessage.DELETE_SUCC });
-        } catch (error: any) {
-            res.status(500).json({ success: false, message: resMessage.DELETE_FAILED, error: error.message });
-        }
+        res.status(StatusUtil.OK).json({
+            success: true,
+            message: MessageUtil.DATA_FOUND,
+            totalCount,
+            lastSeenId: newLastSeenId,
+            data: paginatedUsers
+        });
     }
 }
 

@@ -1,8 +1,10 @@
-import express, { Router } from 'express';
+import { Express } from 'express';
+import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
-const router: Router = express.Router();
 
-router.use('/users', userRoutes);
-
-// Export the router
-export default router;
+export class Routes {
+    static initRoutes(app: Express, version: string) {
+        app.use(`/${version}/auth`, authRoutes);
+        app.use(`/${version}/user`, userRoutes);
+    }
+}
