@@ -10,10 +10,11 @@ import { Routes } from "@/routes";
 import { globalLimiter } from "@/middleware/rate.limiting.middleware";
 import { globalErrorHandler } from '@/middleware/error.handler.middleware';
 
+const app = express();
 
 async function bootstrap() {
   try {
-    const app = express();
+
 
     Database.init(process.env.DB_URL as string);
 
@@ -33,9 +34,11 @@ async function bootstrap() {
 
     app.use(globalErrorHandler);
 
-    app.listen(process.env.PORT, () => {
-      console.log(`Server is running on http://localhost:${process.env.PORT}`);
-    });
+    if (process.env.NODE_ENV !== 'test') {
+      app.listen(process.env.PORT, () => {
+        console.log(`Server is running on http://localhost:${process.env.PORT}`);
+      });
+    }
   } catch (err) {
     console.error("Error during App initialization", err);
     process.exit(1);
@@ -43,3 +46,5 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+export default app;

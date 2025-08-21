@@ -6,7 +6,8 @@
     "build": "tsc && xcopy public dist\\public /E /I /Y",
     "build_linux": "tsc && cp -r public dist/public",
     "start:prod": "npm run build && cross-env NODE_ENV=production node -r dotenv/config ./dist/index.js",
-    "start:dev": "cross-env NODE_ENV=development nodemon"
+    "start:dev": "cross-env NODE_ENV=development nodemon",
+    "test:e2e": "jest --runInBand"
   },
   "keywords": [],
   "author": "",
@@ -31,13 +32,28 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.0",
+    "@types/jest": "^29.0.0",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/mongoose": "^5.11.96",
     "@types/node": "^22.8.2",
     "@types/nodemailer": "^6.4.17",
+    "@types/supertest": "^6.0.3",
     "cross-env": "^10.0.0",
+    "jest": "^29.0.0",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/?(*.)+(e2e-spec|e2e-test).[jt]s?(x)"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
   },
   "_moduleAliases": {
     "@": "dist"
