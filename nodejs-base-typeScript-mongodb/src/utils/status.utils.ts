@@ -7,4 +7,5 @@ export class StatusUtil {
   static readonly NOT_FOUND = 404;
   static readonly CONFLICT = 409;
   static readonly INTERNAL_SERVER_ERROR = 500;
+  static readonly EXTERNAL_SERVICE_FAIL = 502;
 }

@@ -28,14 +28,12 @@ const checkAuthorization = async (headers: any) => {
     const token: string = headers['authorization']?.split(' ')[1]!;
     if (!token) throw new AppError(MessageUtil.AUTHORIZATION_MISSING, StatusUtil.UNAUTHORIZED);
 
-    // const token: string = authHeader.split(' ')[1];
-    // await tokenExist(token);
+    await tokenExist(token);
     return token;
 }
 
 export const verifyToken = (type = TokenType.ACCESS) => {
     return async (req: Request, res: Response, next: NextFunction) => {
-
         try {
             const token = await checkAuthorization(req.headers);
             const secret = getSecretByTokenType(type);

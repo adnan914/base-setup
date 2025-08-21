@@ -3,9 +3,7 @@ import { AppError, MessageUtil, StatusUtil } from '@/utils';
 
 export class Database {
     static init(db_url: string): void {
-        if (!db_url) {
-            throw new AppError(MessageUtil.DB_CONNECTION_ERROR, StatusUtil.INTERNAL_SERVER_ERROR);
-        }
+        if (!db_url) throw new AppError(MessageUtil.DB_CONNECTION_ERROR, StatusUtil.INTERNAL_SERVER_ERROR);
 
         mongoose.connect(db_url)
             .then(() => {

@@ -4,11 +4,11 @@
   "main": "index.js",
   "scripts": {
     "clean": "tsc --build --clean",
-    "build": "npm run clean && tsc -p .",
     "start": "npm run build && node dist/index.js",
-    "start:prod": "node dist/index.js",
+    "build": "npm run clean && tsc && xcopy public dist\\public /E /I /Y",
+    "build_linux": "tnpm run clean && tscsc && cp -r public dist/public",
+    "start:prod": "npm run build && cross-env NODE_ENV=production node -r dotenv/config ./dist/index.js",
     "start:dev": "cross-env NODE_ENV=development nodemon",
-
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "migration:revert": "npm run typeorm -- migration:revert -d ./src/config/app.data.source.ts",
     "migration:create": "typeorm-ts-node-commonjs migration:create src/migrations/$npm_config_name",

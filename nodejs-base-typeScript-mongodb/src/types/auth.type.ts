@@ -19,7 +19,9 @@ export interface AuthenticatedRequest extends Request {
 // }
 
 export interface ResetInput {
+  id: Types.ObjectId;
   newPassword: string;
+
 }
 export interface ForgotPassInput {
   email: string;
