@@ -13,7 +13,6 @@ A production-ready NestJS application with MongoDB, JWT authentication, comprehe
 - **Logging**: Winston logger with file and console outputs
 - **API Documentation**: Swagger/OpenAPI integration
 - **Testing**: Jest setup for unit and e2e tests
-- **Docker Support**: Multi-stage Dockerfile and docker-compose
 - **Security**: Helmet, CORS, and other security middlewares
 - **Configuration**: Environment-based configuration management
 
