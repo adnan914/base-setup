@@ -1,17 +1,18 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { GlobalConfigModule } from '../config/config.module'; // 👈 import the module
-import { GlobalConfigService } from '../config/config.service'; // 👈 import the module
+import databaseConfig from '@/config/database.config';
 
 @Module({
-    imports: [
-        GlobalConfigModule, // 👈 now MongooseCoreModule can access GlobalConfigService
-        MongooseModule.forRootAsync({
-            inject: [GlobalConfigService],
-            useFactory: async (config: GlobalConfigService) => ({
-                uri: config.getMongoUri(),
-            }),
-        }),
-    ],
+  imports: [
+    ConfigModule.forFeature(databaseConfig),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get('database.uri'),
+      }),
+    }),
+  ],
 })
-export class MongooseCoreModule { }
+export class DatabaseModule {}

@@ -1,98 +1,236 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NestJS Production-Ready Application
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A production-ready NestJS application with MongoDB, JWT authentication, comprehensive error handling, logging, and testing setup.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Features
 
-## Description
+- **Modular Architecture**: Feature-based modules with shared utilities
+- **MongoDB Integration**: Mongoose with proper schema validation
+- **JWT Authentication**: Access and refresh tokens with Passport
+- **Role-Based Access Control**: Guards and decorators for authorization
+- **Validation**: Class-validator and class-transformer for DTO validation
+- **Error Handling**: Global exception filter with standardized responses
+- **Logging**: Winston logger with file and console outputs
+- **API Documentation**: Swagger/OpenAPI integration
+- **Testing**: Jest setup for unit and e2e tests
+- **Docker Support**: Multi-stage Dockerfile and docker-compose
+- **Security**: Helmet, CORS, and other security middlewares
+- **Configuration**: Environment-based configuration management
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📋 Prerequisites
 
-## Project setup
+- Node.js (v18 or higher)
+- MongoDB (v6.0 or higher)
+- Docker & Docker Compose (optional)
 
+## 🛠️ Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd nestjs-production-app
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   ```bash
+   cp env.example .env
+   ```
+   
+   Update the `.env` file with your configuration:
+   ```env
+   NODE_ENV=development
+   PORT=3000
+   API_PREFIX=api/v1
+   MONGODB_URI=mongodb://localhost:27017/nestjs-app
+   JWT_SECRET=your-super-secret-jwt-key-here
+   JWT_ACCESS_TOKEN_EXPIRES_IN=15m
+   JWT_REFRESH_TOKEN_EXPIRES_IN=7d
+   LOG_LEVEL=info
+   CORS_ORIGIN=http://localhost:3000
+   ```
+
+## 🚀 Running the Application
+
+### Development Mode
 ```bash
-$ npm install
+npm run start:dev
 ```
 
-## Compile and run the project
-
+### Production Mode
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run build
+npm run start:prod
 ```
 
-## Run tests
-
+### Using Docker
 ```bash
-# unit tests
-$ npm run test
+# Start all services (app + MongoDB + Mongo Express)
+docker-compose up -d
 
-# e2e tests
-$ npm run test:e2e
+# View logs
+docker-compose logs -f app
 
-# test coverage
-$ npm run test:cov
+# Stop services
+docker-compose down
 ```
 
-## Deployment
+## 📚 API Documentation
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+Once the application is running, you can access the Swagger documentation at:
+```
+http://localhost:3000/docs
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 🔐 Authentication
 
-## Resources
+The application uses JWT authentication with access and refresh tokens.
 
-Check out a few resources that may come in handy when working with NestJS:
+### Available Endpoints
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/refresh` - Refresh access token
+- `POST /api/v1/auth/logout` - User logout (requires authentication)
 
-## Support
+### Protected Routes
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Most routes require authentication. Use the `@Public()` decorator to make routes public:
 
-## Stay in touch
+```typescript
+@Public()
+@Get('public-route')
+publicRoute() {
+  return 'This route is public';
+}
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Role-Based Access
 
-## License
+Use the `@Roles()` decorator to restrict access by user roles:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```typescript
+@Roles(UserRole.ADMIN)
+@Get('admin-only')
+adminRoute() {
+  return 'Admin only content';
+}
+```
+
+## 🧪 Testing
+
+### Unit Tests
+```bash
+npm run test
+```
+
+### E2E Tests
+```bash
+npm run test:e2e
+```
+
+### Test Coverage
+```bash
+npm run test:cov
+```
+
+## 📁 Project Structure
+
+```
+src/
+├── auth/                 # Authentication module
+│   ├── dto/             # Auth DTOs
+│   ├── strategies/      # Passport strategies
+│   ├── auth.controller.ts
+│   ├── auth.service.ts
+│   └── auth.module.ts
+├── users/               # Users module
+│   ├── dto/             # User DTOs
+│   ├── schemas/         # Mongoose schemas
+│   ├── users.controller.ts
+│   ├── users.service.ts
+│   └── users.module.ts
+├── shared/              # Shared utilities
+│   ├── constants/       # Application constants
+│   ├── decorators/      # Custom decorators
+│   ├── enums/          # TypeScript enums
+│   ├── filters/        # Exception filters
+│   ├── guards/         # Authentication guards
+│   ├── interceptors/   # Response interceptors
+│   └── logger/         # Winston logger
+├── config/             # Configuration files
+├── database/           # Database module
+├── app.module.ts       # Root module
+└── main.ts            # Application entry point
+```
+
+## 🔧 Configuration
+
+The application uses `@nestjs/config` for configuration management. Configuration files are located in `src/config/`:
+
+- `database.config.ts` - MongoDB connection settings
+- `auth.config.ts` - JWT and authentication settings
+- `app.config.ts` - General application settings
+
+## 📝 Logging
+
+The application uses Winston for logging with the following features:
+
+- Console and file logging
+- Different log levels (error, warn, info, debug, verbose)
+- Structured logging with timestamps
+- Separate error log file
+
+Log files are stored in the `logs/` directory.
+
+## 🐳 Docker
+
+### Development
+```bash
+docker-compose up -d
+```
+
+### Production
+```bash
+docker build -t nestjs-app .
+docker run -p 3000:3000 nestjs-app
+```
+
+## 🔒 Security Features
+
+- **Helmet**: Security headers
+- **CORS**: Cross-origin resource sharing
+- **Rate Limiting**: Request throttling
+- **JWT**: Secure token-based authentication
+- **Password Hashing**: bcrypt for password security
+- **Input Validation**: Class-validator for request validation
+- **SQL Injection Protection**: Mongoose ODM protection
+
+## 📊 Monitoring
+
+The application includes:
+
+- Health check endpoint
+- Request logging
+- Error tracking
+- Performance monitoring
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For support, please open an issue in the repository or contact the development team.

@@ -1,33 +1,44 @@
-import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
-import { GlobalConfigModule } from './config/config.module';
-import { DatabaseModule } from './database/database.module';
-import { SharedModule } from './shared/shared.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { UserModule } from './modules/user/user.module';
-import { ReportsModule } from './modules/reports/reports.module';
-import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
-import { DiscoveryFeatureModule } from './discovery/discovery.module';
-import { RouterModule } from '@nestjs/core';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+
+import { DatabaseModule } from '@/database/database.module';
+import { AuthModule } from '@/features/auth/auth.module';
+import { UsersModule } from '@/features/users/users.module';
+import { SharedModule } from '@/shared/shared.module';
+import { AppController } from '@/app.controller';
+
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    GlobalConfigModule,          // async provider + config validation
-    DatabaseModule,              // dynamic forRootAsync
-    SharedModule,                // common services
-    // Lazy loading example via RouterModule:
-    RouterModule.register([
-      { path: 'reports', module: ReportsModule },        // can be split to lazy chunk in monorepo/build
-    ]),
+    // Configuration
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: [`.env.${process.env.NODE_ENV}`]
+    }),
+
+    // Database
+    DatabaseModule,
+
+    // Authentication
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET'),
+        signOptions: {
+          expiresIn: configService.get('JWT_ACCESS_TOKEN_EXPIRES_IN'),
+        },
+      }),
+    }),
+
+    // Feature modules
     AuthModule,
-    UserModule,
-    ReportsModule,
-    DiscoveryFeatureModule,       // discovery service example
+    UsersModule,
+    SharedModule,
   ],
+  controllers: [AppController],
 })
-export class AppModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(RequestLoggerMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.ALL });
-  }
-}
+export class AppModule {}
