@@ -1,0 +1,74 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  id: Int!
+  first_name: String!
+  last_name: String!
+  email: String!
+  terms_agreed_at: DateTime!
+  photo_url: String
+  verified: String
+  verification_token: String
+  bio: String
+  role: UserRole
+  reset_password_token: String
+  reset_password_sent_at: DateTime!
+  isActive: Boolean!
+  cust_id: String
+  cust_card_id: String
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+enum UserRole {
+  Employee
+  Lead
+  Manager
+  Admin
+}
+
+type Attendance {
+  id: Int!
+  date: DateTime!
+  dayOfWeek: DayOfWeek!
+  created_at: DateTime!
+}
+
+enum DayOfWeek {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+type AttendanceUser {
+  id: Int!
+  user: User!
+  attendance: Attendance!
+  markedBy: User
+}
+
+type Query {
+  users: [User!]!
+  attendances: [Attendance!]!
+  attendanceUsers: [AttendanceUser!]!
+}
+
+type Mutation {
+  createUser(createUserInput: CreateUserDto!): User!
+}
+
+input CreateUserDto {
+  first_name: String!
+  last_name: String!
+  email: String!
+  password: String!
+}
