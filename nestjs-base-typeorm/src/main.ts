@@ -22,7 +22,6 @@ async function bootstrap() {
     origin: configService.get('CORS_ORIGIN'),
     credentials: true,
   });
-
   // Global prefix
   app.setGlobalPrefix(configService.get('API_PREFIX'));
 
@@ -50,8 +49,8 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('NestJS Production API')
-    .setDescription('Production-ready NestJS application with MongoDB and JWT auth')
+    .setTitle('Hash Tax')
+    .setDescription('Hash Tax')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

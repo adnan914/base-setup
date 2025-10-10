@@ -9,7 +9,7 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,28 +19,26 @@ import { Roles } from '@/shared/decorators/roles.decorator';
 import { UserRole } from '@/shared/enums';
 import { UserEntity as User } from '../../entities/user.entity';
 import { ParseIntPipe, ParseBooleanPipe, ParseArrayPipe } from '@/shared/pipes';
+import { Messages } from '@/shared/decorators/messages.decorator';
+import { MESSAGES } from '@/shared/constants';
 
 @ApiTags('users')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Post()
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({ status: 201, description: 'User created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 409, description: 'User already exists' })
+  @Messages(MESSAGES.CREATED)
   create(@Body() createUserDto: CreateUserDto): Promise<User> {
     return this.usersService.create(createUserDto);
   }
 
   @Get()
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
+  @Messages(MESSAGES.DATA_FOUND)
   findAll(
     @Query('page', ParseIntPipe) page?: number,
     @Query('limit', ParseIntPipe) limit?: number,
@@ -51,17 +49,13 @@ export class UsersController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get user by ID' })
-  @ApiResponse({ status: 200, description: 'User retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
+  @Messages(MESSAGES.DATA_FOUND)
   findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findById(id);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update user' })
-  @ApiResponse({ status: 200, description: 'User updated successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
+  @Messages(MESSAGES.UPDATED)
   update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -71,9 +65,7 @@ export class UsersController {
 
   @Delete(':id')
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Delete user' })
-  @ApiResponse({ status: 200, description: 'User deleted successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
+  @Messages(MESSAGES.DELETED) 
   remove(@Param('id') id: string): Promise<void> {
     return this.usersService.remove(id);
   }

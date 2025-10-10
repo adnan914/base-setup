@@ -19,6 +19,8 @@ import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard';
 import { Public } from '@/shared/decorators/public.decorator';
+import { Messages } from '@/shared/decorators/messages.decorator';
+import { MESSAGES } from '@/shared/constants';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -27,40 +29,28 @@ export class AuthController {
 
   @Post('login')
   @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'User login' })
-  @ApiResponse({ status: 200, description: 'Login successful' })
-  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @Messages(MESSAGES.LOGOUT_SUCCESS)
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
   @Post('register')
   @Public()
-  @ApiOperation({ summary: 'User registration' })
-  @ApiResponse({ status: 201, description: 'Registration successful' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 409, description: 'User already exists' })
+  @Messages(MESSAGES.CREATED)
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Post('refresh')
   @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Refresh access token' })
-  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
-  @ApiResponse({ status: 401, description: 'Invalid refresh token' })
+  @Messages(MESSAGES.REFRESH_SUCCESS)
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(refreshTokenDto);
   }
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'User logout' })
-  @ApiResponse({ status: 200, description: 'Logout successful' })
+  @Messages(MESSAGES.LOGOUT_SUCCESS)
   async logout(@Request() req) {
     return this.authService.logout(req.user.id);
   }

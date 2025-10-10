@@ -1,7 +1,6 @@
 {
-  "name": "nestjs-production-app",
+  "name": "hash_tax",
   "version": "1.0.0",
-  "description": "Production-ready NestJS application with Typeorm Postgress, JWT auth, and comprehensive setup",
   "author": "Your Name",
   "private": true,
   "license": "MIT",
