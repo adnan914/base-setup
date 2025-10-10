@@ -1,0 +1,43 @@
+services:
+  app:
+    build: .
+    image: nestjs-app # custom image name
+    container_name: nestjs-app
+    restart: always
+    ports:
+      - '${PORT}:3000'
+    environment:
+      - NODE_ENV=development
+      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@mongo:${MONGO_PORT}/${MONGO_DB}?authSource=admin
+    networks:
+      - custom_network
+    volumes:
+      - .:/app          # ← bind mount local project
+      - /app/node_modules  # ← ignore host node_modules
+    depends_on:
+      - mongo
+    command: npm run start:dev
+    
+  
+  mongo:
+    image: mongo:8
+    container_name: mongo
+    environment:
+    - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+    - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
+    - MONGO_INITDB_DATABASE=${MONGO_DB}
+#     Agar tum user/password use karna chahte ho,
+# to Mongo service me environment variables set karne padenge:
+    networks:
+      - custom_network
+    volumes:
+      - mongo_data:/data/db   #Ye mongo_data ek Docker-managed volume hai, jo /var/lib/docker/volumes/mongo_data/_data me stored hota hai (Linux me).
+      # - ./db_vol/mongo:/data/db #Bind Mount (Local folder) ye khud create kardega
+
+networks:
+  custom_network:
+    name: nest-mongo-network
+    driver: bridge
+    
+volumes:
+  mongo_data:
