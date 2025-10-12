@@ -11,6 +11,10 @@ import { AppController } from '@/app.controller';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import dbConfig from './config/db.config';
+
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard';
+
 @Module({
   imports: [
     // Configuration
@@ -37,5 +41,9 @@ import dbConfig from './config/db.config';
     SharedModule,
   ],
   controllers: [AppController],
+  providers: [{
+    provide: APP_GUARD,
+    useClass: JwtAuthGuard,
+  }]
 })
-export class AppModule {}
+export class AppModule { }

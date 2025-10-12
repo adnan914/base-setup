@@ -14,9 +14,6 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard';
-import { RolesGuard } from '@/shared/guards/roles.guard';
-import { Roles } from '@/shared/decorators/roles.decorator';
-import { UserRole } from '@/shared/enums';
 import { UserEntity as User } from '../../entities/user.entity';
 import { ParseIntPipe, ParseBooleanPipe, ParseArrayPipe } from '@/shared/pipes';
 import { Messages } from '@/shared/decorators/messages.decorator';
@@ -24,20 +21,18 @@ import { MESSAGES } from '@/shared/constants';
 
 @ApiTags('users')
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @Post()
-  @Roles(UserRole.ADMIN)
   @Messages(MESSAGES.CREATED)
   create(@Body() createUserDto: CreateUserDto): Promise<User> {
     return this.usersService.create(createUserDto);
   }
 
   @Get()
-  @Roles(UserRole.ADMIN)
   @Messages(MESSAGES.DATA_FOUND)
   findAll(
     @Query('page', ParseIntPipe) page?: number,
@@ -64,7 +59,6 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
   @Messages(MESSAGES.DELETED) 
   remove(@Param('id') id: string): Promise<void> {
     return this.usersService.remove(id);

@@ -5,7 +5,7 @@ import * as bcrypt from 'bcryptjs';
 import { UserEntity as User } from '@/entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRole, UserStatus } from '@/shared/enums';
+import { Role, Status } from '@/shared/enums';
 
 @Injectable()
 export class UsersService {
@@ -14,12 +14,12 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const { email, password, roles = [UserRole.USER] } = createUserDto;
+    const { email, password, roles = [Role.USER] } = createUserDto;
 
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({ where: { email } });
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException('');
     }
 
     // Hash password
@@ -30,7 +30,7 @@ export class UsersService {
       ...createUserDto,
       password: hashedPassword,
       roles,
-      status: UserStatus.ACTIVE,
+      status: Status.ACTIVE,
     });
 
     return this.userRepository.save(user);

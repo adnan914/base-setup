@@ -1,45 +1,48 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { UserRole, UserStatus } from '@/shared/enums';
+import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, BeforeUpdate } from 'typeorm';
+import { Role, Status } from '@/shared/enums';
 
 @Entity({ name: 'users' })
 export class UserEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+   @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-  @Index()
-  @Column({ unique: true })
-  email: string;
+    @Column({ type: 'varchar', length: 100 })
+    firstName: string;
 
-  @Column()
-  firstName: string;
+    @Column({ type: 'varchar', length: 100 })
+    lastName: string;
 
-  @Column()
-  lastName: string;
+    @Column({ type: 'varchar', length: 150, unique: true })
+    email: string;
 
-  @Column({ select: false })
-  password: string;
+    @Column({ type: 'varchar', select: false })
+    password: string;
 
-  @Column('simple-array')
-  roles: UserRole[];
+    @Column({ type: 'enum', enum: Role })
+    role: Role;
 
-  @Index()
-  @Column({ type: 'varchar', default: UserStatus.ACTIVE })
-  status: UserStatus;
+    @Column({ type: 'enum', enum: Status, default: Status.ACTIVE })
+    status: Status;
 
-  @Column({ default: false })
-  emailVerified: boolean;
+    @Column({ type: 'varchar', nullable: true })
+    profileImg?: string;
 
-  @Column({ type: 'timestamptz', nullable: true })
-  lastLoginAt?: Date;
+    @CreateDateColumn()
+    createdAt: Date;
 
-  @Column({ nullable: true, select: false })
-  refreshToken?: string;
+    @UpdateDateColumn()
+    updatedAt: Date;
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  createdAt: Date;
+    @BeforeUpdate()
+    updateTimestamp() {
+        this.updatedAt = new Date();
+    }
 
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updatedAt: Date;
+    // Optional: hide password when serializing to JSON
+    toJSON() {
+        const { password, ...rest } = this;
+        return rest;
+    }
 }
 
 export default UserEntity;

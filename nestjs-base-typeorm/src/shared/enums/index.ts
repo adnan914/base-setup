@@ -1,19 +1,18 @@
-export enum UserRole {
-  ADMIN = 'admin',
-  USER = 'user',
-  MODERATOR = 'moderator',
+export enum TokenType {
+  ACCESS = "ACCESS",
+  REFRESH = "REFRESH",
+  FORGOTPASSWORD = "FORGOTPASSWORD" 
 }
 
-export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  SUSPENDED = 'suspended',
-  PENDING = 'pending',
+
+export enum Role {
+  ADMIN = "Admin",
+  USER = "User"
 }
 
-export enum SortOrder {
-  ASC = 'asc',
-  DESC = 'desc',
+export enum Status {
+  ACTIVE = "Active",
+  INACTIVE = "Inactive",
 }
 
 export enum HttpStatus {

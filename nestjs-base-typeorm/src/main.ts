@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { CustomValidationPipe } from '@/shared/pipes/validation.pipe';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -42,9 +42,10 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
 
   // Global interceptors
+  const reflector = app.get(Reflector);
   app.useGlobalInterceptors(
-    new ResponseInterceptor(),
-    new TimeoutInterceptor(30000), // 30 seconds timeout
+    new ResponseInterceptor(reflector),
+    new TimeoutInterceptor(30000),
   );
 
   // Swagger documentation
