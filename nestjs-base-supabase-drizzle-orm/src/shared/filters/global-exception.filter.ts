@@ -1,4 +1,11 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { MESSAGES } from '@/shared/constants';
 
@@ -10,6 +17,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const requestId = request.header('x-request-id');
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = MESSAGES.INTERNAL_SERVER_ERROR;
@@ -23,12 +31,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         message = (exceptionResponse as any).message || exception.message;
         error = (exceptionResponse as any).error || exception.message;
       } else {
-        message = (exception.message || message);
+        message = exception.message || message;
         error = exception.message;
       }
-    } else if (exception instanceof Error) {
-      message = (exception.message || message);
-      error = exception.name;
     }
 
     // Log the error
@@ -42,7 +47,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       success: false,
       message,
       error,
-      statusCode: status
+      statusCode: status,
+      requestId,
+      timestamp: new Date().toISOString(),
     });
   }
 }

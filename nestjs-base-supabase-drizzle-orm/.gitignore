@@ -44,3 +44,6 @@ lerna-debug.log*
 # temp
 .tmp
 .temp
+
+# Reproducible dependency installs
+!package-lock.json

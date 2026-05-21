@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { AuthModule } from '@/features/auth/auth.module';
 import { UsersModule } from '@/features/users/users.module';
@@ -9,10 +9,10 @@ import { SharedModule } from '@/shared/shared.module';
 import { AppController } from '@/app.controller';
 import { DatabaseModule } from '@/database';
 
-import { ConfigService } from '@nestjs/config';
-
 import { APP_GUARD } from '@nestjs/core';
+import { validateEnvironment } from '@/config/env.validation';
 import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard';
+import { RolesGuard } from '@/shared/guards/roles.guard';
 
 @Module({
   imports: [
@@ -20,19 +20,12 @@ import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [`.env.${process.env.NODE_ENV ?? 'development'}`, '.env'],
+      validate: validateEnvironment,
     }),
 
     // Authentication
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.get('JWT_ACCESS_TOKEN_EXPIRES_IN'),
-        },
-      }),
-    }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     DatabaseModule,
     // Feature modules
     AuthModule,
@@ -40,9 +33,19 @@ import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard';
     SharedModule,
   ],
   controllers: [AppController],
-  providers: [{
-    provide: APP_GUARD,
-    useClass: JwtAuthGuard,
-  }]
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
-export class AppModule { }
+export class AppModule {}

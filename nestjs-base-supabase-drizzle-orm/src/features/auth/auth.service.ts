@@ -1,7 +1,5 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '@/features/users/users.service';
@@ -16,22 +14,26 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<PublicUser | null> {
     const user = await this.usersService.findByEmail(email);
-    
+
     if (user && (await bcrypt.compare(password, user.password))) {
-      const { password: _pw, ...result } = user as any;
+      const { password: _pw, refreshToken: _refreshToken, ...result } = user;
       return result;
     }
-    
+
     return null;
   }
 
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
-    
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -41,10 +43,10 @@ export class AuthService {
     }
 
     const tokens = await this.generateTokens(user);
-    
+
     // Update last login and refresh token
     await this.usersService.updateLastLogin(user.id);
-    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+    await this.storeRefreshToken(user.id, tokens.refreshToken);
 
     return {
       user: {
@@ -61,11 +63,11 @@ export class AuthService {
 
   async register(registerDto: RegisterDto) {
     const user = await this.usersService.create(registerDto);
-    
+
     const tokens = await this.generateTokens(user);
-    
+
     // Update refresh token
-    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+    await this.storeRefreshToken(user.id, tokens.refreshToken);
 
     return {
       user: {
@@ -85,20 +87,27 @@ export class AuthService {
       const payload = await this.jwtService.verifyAsync(
         refreshTokenDto.refreshToken,
         {
-          secret: process.env.JWT_SECRET,
+          secret: this.configService.getOrThrow<string>('JWT_SECRET'),
         },
       );
 
+      if (payload.type !== 'refresh') {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
       const user = await this.usersService.findAuthById(payload.sub);
-      
-      if (!user || user.refreshToken !== refreshTokenDto.refreshToken) {
+
+      if (
+        !user.refreshToken ||
+        !(await bcrypt.compare(refreshTokenDto.refreshToken, user.refreshToken))
+      ) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
       const tokens = await this.generateTokens(user);
-      
+
       // Update refresh token
-      await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+      await this.storeRefreshToken(user.id, tokens.refreshToken);
 
       return tokens;
     } catch (error) {
@@ -118,23 +127,36 @@ export class AuthService {
       roles: user.roles,
     };
 
-    const accessTokenExpiresIn = (process.env.JWT_ACCESS_TOKEN_EXPIRES_IN ||
-      '15m') as any;
-    const refreshTokenExpiresIn = (process.env.JWT_REFRESH_TOKEN_EXPIRES_IN ||
-      '7d') as any;
+    const accessTokenExpiresIn = this.configService.getOrThrow<string>(
+      'JWT_ACCESS_TOKEN_EXPIRES_IN',
+    ) as any;
+    const refreshTokenExpiresIn = this.configService.getOrThrow<string>(
+      'JWT_REFRESH_TOKEN_EXPIRES_IN',
+    ) as any;
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        expiresIn: accessTokenExpiresIn,
-      }),
-      this.jwtService.signAsync(payload, {
-        expiresIn: refreshTokenExpiresIn,
-      }),
+      this.jwtService.signAsync(
+        { ...payload, type: 'access' },
+        {
+          expiresIn: accessTokenExpiresIn,
+        },
+      ),
+      this.jwtService.signAsync(
+        { ...payload, type: 'refresh' },
+        {
+          expiresIn: refreshTokenExpiresIn,
+        },
+      ),
     ]);
 
     return {
       accessToken,
       refreshToken,
     };
+  }
+
+  private async storeRefreshToken(userId: string, refreshToken: string) {
+    const refreshTokenHash = await bcrypt.hash(refreshToken, 12);
+    await this.usersService.updateRefreshToken(userId, refreshTokenHash);
   }
 }

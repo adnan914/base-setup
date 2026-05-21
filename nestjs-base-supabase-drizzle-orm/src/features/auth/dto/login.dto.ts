@@ -11,9 +11,9 @@ export class LoginDto {
 
   @ApiProperty({
     description: 'User password',
-    example: 'password123',
+    example: 'Use-A-Long-Password-123',
   })
   @IsString({ message: 'Password must be a string' })
-  @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  @MinLength(12, { message: 'Password must be at least 12 characters long' })
   password: string;
 }

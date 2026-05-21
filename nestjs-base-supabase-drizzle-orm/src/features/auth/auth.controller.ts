@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 // import {
 //   ApiTags,
 //   ApiOperation,
@@ -28,20 +29,24 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  @Messages(MESSAGES.LOGOUT_SUCCESS)
+  @Messages(MESSAGES.LOGIN_SUCCESS)
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('register')
   @Messages(MESSAGES.CREATED)
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
+  @Public()
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Post('refresh')
   @Messages(MESSAGES.REFRESH_SUCCESS)
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {

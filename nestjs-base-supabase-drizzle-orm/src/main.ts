@@ -1,25 +1,37 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { CustomValidationPipe } from '@/shared/pipes/validation.pipe';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { randomUUID } from 'crypto';
 import { AppModule } from '@/app.module';
 import { ConfigService } from '@nestjs/config';
 import { GlobalExceptionFilter } from '@/shared/filters/global-exception.filter';
 import { ResponseInterceptor } from '@/shared/interceptors/response.interceptor';
 import { TimeoutInterceptor } from '@/shared/interceptors/timeout.interceptor';
+import { WinstonLogger } from '@/shared/logger/winston.logger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
+  app.useLogger(app.get(WinstonLogger));
+  app.enableShutdownHooks();
 
   // Security middleware
   app.use(helmet());
+  app.use((req, res, next) => {
+    const requestId = req.header('x-request-id') || randomUUID();
+    req.headers['x-request-id'] = requestId;
+    res.setHeader('x-request-id', requestId);
+    next();
+  });
 
   // CORS
   app.enableCors({
-    origin: configService.get('CORS_ORIGIN'),
+    origin: configService
+      .getOrThrow<string>('CORS_ORIGIN')
+      .split(',')
+      .map((origin) => origin.trim()),
     credentials: true,
   });
   // Global prefix
@@ -27,7 +39,6 @@ async function bootstrap() {
 
   // Global pipes
   app.useGlobalPipes(
-    new CustomValidationPipe(),
     new ValidationPipe({
       transform: true,
       whitelist: true,
@@ -49,15 +60,17 @@ async function bootstrap() {
   );
 
   // Swagger documentation
-  const config = new DocumentBuilder()
-    .setTitle('Hash Tax')
-    .setDescription('Hash Tax')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
+  if (configService.get<boolean>('SWAGGER_ENABLED')) {
+    const config = new DocumentBuilder()
+      .setTitle('Hash Tax')
+      .setDescription('Hash Tax')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document);
+  }
 
   app.getHttpAdapter().get('/', (req, res) => {
     res.json({
@@ -68,8 +81,7 @@ async function bootstrap() {
   const port = configService.get('PORT') || 3000;
   await app.listen(port);
 
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation: http://localhost:${port}/docs`);
+  app.get(WinstonLogger).log(`Application is running on port ${port}`);
 }
 
 bootstrap();

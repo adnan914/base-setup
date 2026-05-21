@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
+import { and, arrayOverlaps, eq } from 'drizzle-orm';
 import { DatabaseService, PublicUser, User, users } from '@/database';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -35,8 +39,33 @@ export class UsersService {
     return this.toPublicUser(user);
   }
 
-  async findAll(): Promise<PublicUser[]> {
-    const allUsers = await this.databaseService.db.select().from(users);
+  async findAll(options?: {
+    page?: number;
+    limit?: number;
+    active?: boolean;
+    roles?: string[];
+  }): Promise<PublicUser[]> {
+    const page = Math.max(options?.page ?? 1, 1);
+    const limit = Math.min(Math.max(options?.limit ?? 20, 1), 100);
+    const filters = [];
+
+    if (options?.active !== undefined) {
+      filters.push(
+        eq(users.status, options.active ? Status.ACTIVE : Status.INACTIVE),
+      );
+    }
+
+    if (options?.roles?.length) {
+      filters.push(arrayOverlaps(users.roles, options.roles as Role[]));
+    }
+
+    const allUsers = await this.databaseService.db
+      .select()
+      .from(users)
+      .where(filters.length ? and(...filters) : undefined)
+      .limit(limit)
+      .offset((page - 1) * limit);
+
     return allUsers.map((user) => this.toPublicUser(user));
   }
 
@@ -132,8 +161,11 @@ export class UsersService {
   }
 
   private toPublicUser(user: User): PublicUser {
-    const { password: _password, refreshToken: _refreshToken, ...publicUser } =
-      user;
+    const {
+      password: _password,
+      refreshToken: _refreshToken,
+      ...publicUser
+    } = user;
     return publicUser;
   }
 }

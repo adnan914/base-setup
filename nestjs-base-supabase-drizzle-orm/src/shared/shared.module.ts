@@ -1,7 +1,9 @@
 import { Module, Global } from '@nestjs/common';
+import { WinstonLogger } from './logger/winston.logger';
 
 @Global()
 @Module({
-  exports: [],
+  providers: [WinstonLogger],
+  exports: [WinstonLogger],
 })
 export class SharedModule {}
