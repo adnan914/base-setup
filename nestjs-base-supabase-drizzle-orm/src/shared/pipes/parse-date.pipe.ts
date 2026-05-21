@@ -4,20 +4,19 @@ import {
   ArgumentMetadata,
   BadRequestException,
 } from '@nestjs/common';
+import { MESSAGES } from '@/shared/constants';
 
 @Injectable()
 export class ParseDatePipe implements PipeTransform<string> {
   transform(value: string, _metadata: ArgumentMetadata): Date {
     if (!value) {
-      throw new BadRequestException('Date value is required');
+      throw new BadRequestException(MESSAGES.VALIDATION_DATE_REQUIRED);
     }
 
     const date = new Date(value);
 
     if (isNaN(date.getTime())) {
-      throw new BadRequestException(
-        'Validation failed (valid date string is expected)',
-      );
+      throw new BadRequestException(MESSAGES.VALIDATION_DATE_STRING);
     }
 
     return date;

@@ -4,6 +4,7 @@ import {
   ArgumentMetadata,
   BadRequestException,
 } from '@nestjs/common';
+import { MESSAGES } from '@/shared/constants';
 
 @Injectable()
 export class ParseIntPipe implements PipeTransform<string, number | undefined> {
@@ -15,9 +16,7 @@ export class ParseIntPipe implements PipeTransform<string, number | undefined> {
     const val = parseInt(value, 10);
 
     if (isNaN(val)) {
-      throw new BadRequestException(
-        'Validation failed (numeric string is expected)',
-      );
+      throw new BadRequestException(MESSAGES.VALIDATION_NUMERIC_STRING);
     }
 
     return val;

@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { PublicUser, User } from '@/database';
+import { MESSAGES } from '@/shared/constants';
 import { Status } from '@/shared/enums';
 import { AuthSessionsService } from './auth-sessions.service';
 
@@ -51,11 +52,11 @@ export class AuthService {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(MESSAGES.INVALID_CREDENTIALS);
     }
 
     if (user.status !== Status.ACTIVE) {
-      throw new UnauthorizedException('Account is not active');
+      throw new UnauthorizedException(MESSAGES.ACCOUNT_NOT_ACTIVE);
     }
 
     const sessionId = randomUUID();
@@ -129,7 +130,7 @@ export class AuthService {
         !payload.jti ||
         !payload.exp
       ) {
-        throw new UnauthorizedException('Invalid refresh token');
+        throw new UnauthorizedException(MESSAGES.INVALID_REFRESH_TOKEN);
       }
 
       const user = await this.usersService.findAuthById(payload.sub);
@@ -141,7 +142,7 @@ export class AuthService {
         session.revokedAt ||
         session.expiresAt <= new Date()
       ) {
-        throw new UnauthorizedException('Invalid refresh token');
+        throw new UnauthorizedException(MESSAGES.INVALID_REFRESH_TOKEN);
       }
 
       if (
@@ -155,7 +156,7 @@ export class AuthService {
           session.id,
           'refresh-token-reuse',
         );
-        throw new UnauthorizedException('Invalid refresh token');
+        throw new UnauthorizedException(MESSAGES.INVALID_REFRESH_TOKEN);
       }
 
       const tokens = await this.generateTokens(user, session.id);
@@ -172,7 +173,7 @@ export class AuthService {
         refreshToken: tokens.refreshToken,
       };
     } catch {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException(MESSAGES.INVALID_REFRESH_TOKEN);
     }
   }
 
@@ -185,7 +186,7 @@ export class AuthService {
       }
     }
 
-    return { message: 'Logged out successfully' };
+    return { message: MESSAGES.LOGGED_OUT };
   }
 
   private async generateTokens(user: User | PublicUser, sessionId: string) {
@@ -231,7 +232,7 @@ export class AuthService {
 
   private getRefreshTokenExpiry(payload: RefreshTokenPayload | null) {
     if (!payload?.exp) {
-      throw new UnauthorizedException('Invalid refresh token expiry');
+      throw new UnauthorizedException(MESSAGES.INVALID_REFRESH_TOKEN_EXPIRY);
     }
 
     return new Date(payload.exp * 1000);

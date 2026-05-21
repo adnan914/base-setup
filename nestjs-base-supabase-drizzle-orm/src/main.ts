@@ -64,7 +64,9 @@ async function bootstrap() {
   if (configService.get<boolean>('SWAGGER_ENABLED')) {
     const config = new DocumentBuilder()
       .setTitle('Hash Tax')
-      .setDescription('Hash Tax')
+      .setDescription(
+        'Hash Tax API documentation for health, authentication, and user endpoints.',
+      )
       .setVersion('1.0')
       .addBearerAuth()
       .build();

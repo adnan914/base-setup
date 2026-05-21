@@ -109,7 +109,7 @@ export function validateEnvironment(config: Record<string, unknown>) {
         config.DATABASE_SSL_REJECT_UNAUTHORIZED,
         true,
       ),
-      SWAGGER_ENABLED: parseBoolean(config.SWAGGER_ENABLED, false),
+      SWAGGER_ENABLED: parseBoolean(config.SWAGGER_ENABLED, true),
     },
     {
       enableImplicitConversion: true,

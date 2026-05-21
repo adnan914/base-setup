@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
+import { MESSAGES } from '@/shared/constants';
 import { IS_PUBLIC_KEY } from '@/shared/decorators/public.decorator';
 
 @Injectable()
@@ -28,7 +29,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   handleRequest<TUser = any>(err: Error | null, user: TUser) {
     if (err || !user) {
-      throw err || new UnauthorizedException('Unauthorized access');
+      throw err || new UnauthorizedException(MESSAGES.UNAUTHORIZED);
     }
 
     return user;

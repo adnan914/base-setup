@@ -14,6 +14,7 @@ import {
 } from '@/database';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { MESSAGES } from '@/shared/constants';
 import { Role, Status } from '@/shared/enums';
 
 @Injectable()
@@ -25,7 +26,7 @@ export class UsersService {
 
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException(MESSAGES.USER_ALREADY_EXISTS);
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -83,7 +84,7 @@ export class UsersService {
       .limit(1);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(MESSAGES.USER_NOT_FOUND);
     }
 
     return this.toPublicUser(user);
@@ -97,7 +98,7 @@ export class UsersService {
       .limit(1);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(MESSAGES.USER_NOT_FOUND);
     }
 
     return user;
@@ -132,7 +133,7 @@ export class UsersService {
       .returning();
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(MESSAGES.USER_NOT_FOUND);
     }
 
     if (password) {
@@ -149,7 +150,7 @@ export class UsersService {
       .returning({ id: users.id });
 
     if (!deletedUser) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(MESSAGES.USER_NOT_FOUND);
     }
   }
 

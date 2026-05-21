@@ -4,6 +4,7 @@ import {
   ArgumentMetadata,
   BadRequestException,
 } from '@nestjs/common';
+import { MESSAGES } from '@/shared/constants';
 
 @Injectable()
 export class ParseBooleanPipe implements PipeTransform<
@@ -23,8 +24,6 @@ export class ParseBooleanPipe implements PipeTransform<
       return false;
     }
 
-    throw new BadRequestException(
-      'Validation failed (boolean string is expected)',
-    );
+    throw new BadRequestException(MESSAGES.VALIDATION_BOOLEAN_STRING);
   }
 }

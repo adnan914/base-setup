@@ -4,6 +4,7 @@ import {
   ArgumentMetadata,
   BadRequestException,
 } from '@nestjs/common';
+import { MESSAGES } from '@/shared/constants';
 
 @Injectable()
 export class ParseArrayPipe implements PipeTransform<string> {
@@ -24,9 +25,7 @@ export class ParseArrayPipe implements PipeTransform<string> {
       // Handle single value
       return [value.trim()];
     } catch {
-      throw new BadRequestException(
-        'Validation failed (array string is expected)',
-      );
+      throw new BadRequestException(MESSAGES.VALIDATION_ARRAY_STRING);
     }
   }
 }
