@@ -2,12 +2,27 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import { UsersService } from '@/features/users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { PublicUser, User } from '@/database';
 import { Status } from '@/shared/enums';
+import { AuthSessionsService } from './auth-sessions.service';
+
+type SessionMetadata = {
+  ipAddress?: string;
+  userAgent?: string;
+};
+
+type RefreshTokenPayload = {
+  exp?: number;
+  jti?: string;
+  sid?: string;
+  sub: string;
+  type: 'refresh';
+};
 
 @Injectable()
 export class AuthService {
@@ -15,6 +30,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private authSessionsService: AuthSessionsService,
   ) {}
 
   async validateUser(
@@ -24,14 +40,14 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      const { password: _pw, refreshToken: _refreshToken, ...result } = user;
+      const { password: _pw, ...result } = user;
       return result;
     }
 
     return null;
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, metadata: SessionMetadata = {}) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
     if (!user) {
@@ -42,11 +58,18 @@ export class AuthService {
       throw new UnauthorizedException('Account is not active');
     }
 
-    const tokens = await this.generateTokens(user);
+    const sessionId = randomUUID();
+    const tokens = await this.generateTokens(user, sessionId);
 
-    // Update last login and refresh token
     await this.usersService.updateLastLogin(user.id);
-    await this.storeRefreshToken(user.id, tokens.refreshToken);
+    await this.authSessionsService.create({
+      id: sessionId,
+      userId: user.id,
+      refreshTokenHash: await bcrypt.hash(tokens.refreshToken, 12),
+      refreshTokenId: tokens.refreshTokenId,
+      expiresAt: tokens.refreshTokenExpiresAt,
+      ...metadata,
+    });
 
     return {
       user: {
@@ -57,17 +80,25 @@ export class AuthService {
         roles: user.roles,
         status: user.status,
       },
-      ...tokens,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
   }
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto, metadata: SessionMetadata = {}) {
     const user = await this.usersService.create(registerDto);
 
-    const tokens = await this.generateTokens(user);
+    const sessionId = randomUUID();
+    const tokens = await this.generateTokens(user, sessionId);
 
-    // Update refresh token
-    await this.storeRefreshToken(user.id, tokens.refreshToken);
+    await this.authSessionsService.create({
+      id: sessionId,
+      userId: user.id,
+      refreshTokenHash: await bcrypt.hash(tokens.refreshToken, 12),
+      refreshTokenId: tokens.refreshTokenId,
+      expiresAt: tokens.refreshTokenExpiresAt,
+      ...metadata,
+    });
 
     return {
       user: {
@@ -78,54 +109,93 @@ export class AuthService {
         roles: user.roles,
         status: user.status,
       },
-      ...tokens,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
   }
 
   async refreshToken(refreshTokenDto: RefreshTokenDto) {
     try {
-      const payload = await this.jwtService.verifyAsync(
+      const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
         refreshTokenDto.refreshToken,
         {
           secret: this.configService.getOrThrow<string>('JWT_SECRET'),
         },
       );
 
-      if (payload.type !== 'refresh') {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-
-      const user = await this.usersService.findAuthById(payload.sub);
-
       if (
-        !user.refreshToken ||
-        !(await bcrypt.compare(refreshTokenDto.refreshToken, user.refreshToken))
+        payload.type !== 'refresh' ||
+        !payload.sid ||
+        !payload.jti ||
+        !payload.exp
       ) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      const tokens = await this.generateTokens(user);
+      const user = await this.usersService.findAuthById(payload.sub);
+      const session = await this.authSessionsService.findById(payload.sid);
 
-      // Update refresh token
-      await this.storeRefreshToken(user.id, tokens.refreshToken);
+      if (
+        !session ||
+        session.userId !== user.id ||
+        session.revokedAt ||
+        session.expiresAt <= new Date()
+      ) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
 
-      return tokens;
-    } catch (error) {
+      if (
+        session.refreshTokenId !== payload.jti ||
+        !(await bcrypt.compare(
+          refreshTokenDto.refreshToken,
+          session.refreshTokenHash,
+        ))
+      ) {
+        await this.authSessionsService.revoke(
+          session.id,
+          'refresh-token-reuse',
+        );
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const tokens = await this.generateTokens(user, session.id);
+
+      await this.authSessionsService.rotate(
+        session.id,
+        await bcrypt.hash(tokens.refreshToken, 12),
+        tokens.refreshTokenId,
+        tokens.refreshTokenExpiresAt,
+      );
+
+      return {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      };
+    } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
-  async logout(userId: string) {
-    await this.usersService.updateRefreshToken(userId, null);
+  async logout(userId: string, sessionId?: string) {
+    if (sessionId) {
+      const session = await this.authSessionsService.findById(sessionId);
+
+      if (session?.userId === userId) {
+        await this.authSessionsService.revoke(sessionId, 'logout');
+      }
+    }
+
     return { message: 'Logged out successfully' };
   }
 
-  private async generateTokens(user: User | PublicUser) {
+  private async generateTokens(user: User | PublicUser, sessionId: string) {
     const payload = {
       email: user.email,
       sub: user.id,
       roles: user.roles,
+      sid: sessionId,
     };
+    const refreshTokenId = randomUUID();
 
     const accessTokenExpiresIn = this.configService.getOrThrow<string>(
       'JWT_ACCESS_TOKEN_EXPIRES_IN',
@@ -142,21 +212,28 @@ export class AuthService {
         },
       ),
       this.jwtService.signAsync(
-        { ...payload, type: 'refresh' },
+        { ...payload, jti: refreshTokenId, type: 'refresh' },
         {
           expiresIn: refreshTokenExpiresIn,
         },
       ),
     ]);
+    const refreshTokenPayload =
+      this.jwtService.decode<RefreshTokenPayload>(refreshToken);
 
     return {
       accessToken,
       refreshToken,
+      refreshTokenId,
+      refreshTokenExpiresAt: this.getRefreshTokenExpiry(refreshTokenPayload),
     };
   }
 
-  private async storeRefreshToken(userId: string, refreshToken: string) {
-    const refreshTokenHash = await bcrypt.hash(refreshToken, 12);
-    await this.usersService.updateRefreshToken(userId, refreshTokenHash);
+  private getRefreshTokenExpiry(payload: RefreshTokenPayload | null) {
+    if (!payload?.exp) {
+      throw new UnauthorizedException('Invalid refresh token expiry');
+    }
+
+    return new Date(payload.exp * 1000);
   }
 }

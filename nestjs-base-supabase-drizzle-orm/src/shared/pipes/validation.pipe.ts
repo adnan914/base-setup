@@ -20,7 +20,7 @@ export class CustomValidationPipe implements PipeTransform<any> {
     if (errors.length > 0) {
       const errorMessages = errors.map((error) => {
         const constraints = error.constraints;
-        return Object.values(constraints).join(', ');
+        return Object.values(constraints ?? {}).join(', ');
       });
 
       throw new BadRequestException({
@@ -32,8 +32,8 @@ export class CustomValidationPipe implements PipeTransform<any> {
     return object;
   }
 
-  private toValidate(metatype: Function): boolean {
-    const types: Function[] = [String, Boolean, Number, Array, Object];
+  private toValidate(metatype: unknown): boolean {
+    const types: unknown[] = [String, Boolean, Number, Array, Object];
     return !types.includes(metatype);
   }
 }

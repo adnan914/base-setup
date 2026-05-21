@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   index,
+  integer,
   pgEnum,
   pgTable,
   text,
@@ -37,7 +38,6 @@ export const users = pgTable(
       .default(sql`ARRAY['User']::user_role[]`),
     status: statusEnum('status').notNull().default(Status.ACTIVE),
     profileImg: varchar('profile_img', { length: 512 }),
-    refreshToken: text('refresh_token'),
     lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
@@ -77,8 +77,66 @@ export const tokens = pgTable(
   }),
 );
 
+export const authSessions = pgTable(
+  'auth_sessions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    refreshTokenHash: text('refresh_token_hash').notNull(),
+    refreshTokenId: uuid('refresh_token_id').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    revokedReason: varchar('revoked_reason', { length: 100 }),
+    userAgent: varchar('user_agent', { length: 512 }),
+    ipAddress: varchar('ip_address', { length: 64 }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    refreshTokenIdIdx: uniqueIndex('auth_sessions_refresh_token_id_idx').on(
+      table.refreshTokenId,
+    ),
+    userIdIdx: index('auth_sessions_user_id_idx').on(table.userId),
+    expiresAtIdx: index('auth_sessions_expires_at_idx').on(table.expiresAt),
+  }),
+);
+
+export const rateLimits = pgTable(
+  'rate_limits',
+  {
+    key: text('key').notNull(),
+    throttlerName: varchar('throttler_name', { length: 100 }).notNull(),
+    totalHits: integer('total_hits').default(0).notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    blockExpiresAt: timestamp('block_expires_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    keyIdx: uniqueIndex('rate_limits_key_throttler_name_idx').on(
+      table.key,
+      table.throttlerName,
+    ),
+    expiresAtIdx: index('rate_limits_expires_at_idx').on(table.expiresAt),
+  }),
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
-export type PublicUser = Omit<User, 'password' | 'refreshToken'>;
+export type PublicUser = Omit<User, 'password'>;
 export type Token = typeof tokens.$inferSelect;
 export type NewToken = typeof tokens.$inferInsert;
+export type AuthSession = typeof authSessions.$inferSelect;
+export type NewAuthSession = typeof authSessions.$inferInsert;

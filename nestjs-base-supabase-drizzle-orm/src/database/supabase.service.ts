@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import WebSocket = require('ws');
+import WebSocket from 'ws';
 
 @Injectable()
 export class SupabaseService {

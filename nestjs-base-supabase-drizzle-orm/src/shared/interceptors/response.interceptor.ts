@@ -33,7 +33,6 @@
 //   }
 // }
 
-
 // response.interceptor.ts
 import {
   Injectable,
@@ -53,22 +52,20 @@ export interface Response<T> {
 }
 
 @Injectable()
-export class ResponseInterceptor<T>
-  implements NestInterceptor<T, Response<T>> {
-  constructor(private reflector: Reflector) { }
+export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
+  constructor(private reflector: Reflector) {}
 
   intercept(
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<Response<T>> {
-    const message =
-      this.reflector.get<string>(MESSAGES, context.getHandler())
+    const message = this.reflector.get<string>(MESSAGES, context.getHandler());
 
     return next.handle().pipe(
       map((data) => ({
         success: true,
         data,
-        message
+        message,
       })),
     );
   }

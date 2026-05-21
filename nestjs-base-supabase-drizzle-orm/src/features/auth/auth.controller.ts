@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Request,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 // import {
 //   ApiTags,
@@ -22,6 +14,17 @@ import { Messages } from '@/shared/decorators/messages.decorator';
 import { MESSAGES } from '@/shared/constants';
 import { LocalAuthGuard } from '@/shared/guards/local-auth.guard';
 import { Public } from '@/shared/decorators/public.decorator';
+import { Role } from '@/shared/enums';
+
+type AuthenticatedRequest = {
+  ip?: string;
+  user: {
+    id: string;
+    roles: Role[];
+    sessionId?: string;
+  };
+  get(header: string): string | undefined;
+};
 
 // @ApiTags('auth')
 @Controller('auth')
@@ -33,16 +36,22 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @Messages(MESSAGES.LOGIN_SUCCESS)
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.authService.login(loginDto, this.getSessionMetadata(req));
   }
 
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('register')
   @Messages(MESSAGES.CREATED)
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.authService.register(registerDto, this.getSessionMetadata(req));
   }
 
   @Public()
@@ -55,7 +64,14 @@ export class AuthController {
 
   @Post('logout')
   @Messages(MESSAGES.LOGOUT_SUCCESS)
-  async logout(@Request() req) {
-    return this.authService.logout(req.user.id);
+  async logout(@Request() req: AuthenticatedRequest) {
+    return this.authService.logout(req.user.id, req.user.sessionId);
+  }
+
+  private getSessionMetadata(req: AuthenticatedRequest) {
+    return {
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+    };
   }
 }

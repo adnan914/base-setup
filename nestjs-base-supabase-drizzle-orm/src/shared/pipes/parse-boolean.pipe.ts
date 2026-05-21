@@ -6,8 +6,11 @@ import {
 } from '@nestjs/common';
 
 @Injectable()
-export class ParseBooleanPipe implements PipeTransform<string> {
-  transform(value: string, metadata: ArgumentMetadata): boolean {
+export class ParseBooleanPipe implements PipeTransform<
+  string,
+  boolean | undefined
+> {
+  transform(value: string, _metadata: ArgumentMetadata): boolean | undefined {
     if (value === undefined || value === null || value === '') {
       return undefined;
     }

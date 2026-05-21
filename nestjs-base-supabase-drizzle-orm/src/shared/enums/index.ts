@@ -1,18 +1,17 @@
 export enum TokenType {
-  ACCESS = "ACCESS",
-  REFRESH = "REFRESH",
-  FORGOTPASSWORD = "FORGOTPASSWORD" 
+  ACCESS = 'ACCESS',
+  REFRESH = 'REFRESH',
+  FORGOTPASSWORD = 'FORGOTPASSWORD',
 }
 
-
 export enum Role {
-  ADMIN = "Admin",
-  USER = "User"
+  ADMIN = 'Admin',
+  USER = 'User',
 }
 
 export enum Status {
-  ACTIVE = "Active",
-  INACTIVE = "Inactive",
+  ACTIVE = 'Active',
+  INACTIVE = 'Inactive',
 }
 
 export enum HttpStatus {

@@ -7,7 +7,7 @@ import { AuthModule } from '@/features/auth/auth.module';
 import { UsersModule } from '@/features/users/users.module';
 import { SharedModule } from '@/shared/shared.module';
 import { AppController } from '@/app.controller';
-import { DatabaseModule } from '@/database';
+import { DatabaseModule, DatabaseThrottlerStorage } from '@/database';
 
 import { APP_GUARD } from '@nestjs/core';
 import { validateEnvironment } from '@/config/env.validation';
@@ -25,7 +25,14 @@ import { RolesGuard } from '@/shared/guards/roles.guard';
 
     // Authentication
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+    ThrottlerModule.forRootAsync({
+      imports: [DatabaseModule],
+      inject: [DatabaseThrottlerStorage],
+      useFactory: (storage: DatabaseThrottlerStorage) => ({
+        storage,
+        throttlers: [{ ttl: 60000, limit: 100 }],
+      }),
+    }),
     DatabaseModule,
     // Feature modules
     AuthModule,

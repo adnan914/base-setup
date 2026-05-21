@@ -9,6 +9,7 @@ import { GlobalExceptionFilter } from '@/shared/filters/global-exception.filter'
 import { ResponseInterceptor } from '@/shared/interceptors/response.interceptor';
 import { TimeoutInterceptor } from '@/shared/interceptors/timeout.interceptor';
 import { WinstonLogger } from '@/shared/logger/winston.logger';
+import { NextFunction, Request, Response } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,7 +20,7 @@ async function bootstrap() {
 
   // Security middleware
   app.use(helmet());
-  app.use((req, res, next) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     const requestId = req.header('x-request-id') || randomUUID();
     req.headers['x-request-id'] = requestId;
     res.setHeader('x-request-id', requestId);
@@ -35,7 +36,7 @@ async function bootstrap() {
     credentials: true,
   });
   // Global prefix
-  app.setGlobalPrefix(configService.get('API_PREFIX'));
+  app.setGlobalPrefix(configService.getOrThrow<string>('API_PREFIX'));
 
   // Global pipes
   app.useGlobalPipes(

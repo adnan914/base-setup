@@ -5,7 +5,13 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { and, arrayOverlaps, eq } from 'drizzle-orm';
-import { DatabaseService, PublicUser, User, users } from '@/database';
+import {
+  authSessions,
+  DatabaseService,
+  PublicUser,
+  User,
+  users,
+} from '@/database';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Role, Status } from '@/shared/enums';
@@ -129,6 +135,10 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    if (password) {
+      await this.revokeSessions(id, 'password-change');
+    }
+
     return this.toPublicUser(user);
   }
 
@@ -143,14 +153,15 @@ export class UsersService {
     }
   }
 
-  async updateRefreshToken(
-    id: string,
-    refreshToken: string | null,
-  ): Promise<void> {
+  async revokeSessions(id: string, reason: string): Promise<void> {
     await this.databaseService.db
-      .update(users)
-      .set({ refreshToken, updatedAt: new Date() })
-      .where(eq(users.id, id));
+      .update(authSessions)
+      .set({
+        revokedAt: new Date(),
+        revokedReason: reason,
+        updatedAt: new Date(),
+      })
+      .where(eq(authSessions.userId, id));
   }
 
   async updateLastLogin(id: string): Promise<void> {
@@ -161,11 +172,7 @@ export class UsersService {
   }
 
   private toPublicUser(user: User): PublicUser {
-    const {
-      password: _password,
-      refreshToken: _refreshToken,
-      ...publicUser
-    } = user;
+    const { password: _password, ...publicUser } = user;
     return publicUser;
   }
 }
