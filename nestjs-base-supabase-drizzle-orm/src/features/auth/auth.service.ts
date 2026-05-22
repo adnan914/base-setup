@@ -161,12 +161,23 @@ export class AuthService {
 
       const tokens = await this.generateTokens(user, session.id);
 
-      await this.authSessionsService.rotate(
-        session.id,
-        await bcrypt.hash(tokens.refreshToken, 12),
-        tokens.refreshTokenId,
-        tokens.refreshTokenExpiresAt,
-      );
+      const refreshTokenRotated =
+        await this.authSessionsService.rotateIfCurrent(
+          session.id,
+          user.id,
+          payload.jti,
+          await bcrypt.hash(tokens.refreshToken, 12),
+          tokens.refreshTokenId,
+          tokens.refreshTokenExpiresAt,
+        );
+
+      if (!refreshTokenRotated) {
+        await this.authSessionsService.revoke(
+          session.id,
+          'refresh-token-reuse',
+        );
+        throw new UnauthorizedException(MESSAGES.INVALID_REFRESH_TOKEN);
+      }
 
       return {
         accessToken: tokens.accessToken,

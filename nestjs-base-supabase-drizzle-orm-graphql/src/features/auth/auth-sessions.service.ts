@@ -6,6 +6,7 @@ import {
   DatabaseService,
   NewAuthSession,
 } from '@/database';
+import { SessionRevocationReason } from '@/shared/enums';
 
 @Injectable()
 export class AuthSessionsService {
@@ -49,11 +50,12 @@ export class AuthSessionsService {
 
   async rotate(
     id: string,
+    currentRefreshTokenId: string,
     refreshTokenHash: string,
     refreshTokenId: string,
     expiresAt: Date,
-  ) {
-    await this.databaseService.db
+  ): Promise<boolean> {
+    const [rotatedSession] = await this.databaseService.db
       .update(authSessions)
       .set({
         refreshTokenHash,
@@ -61,10 +63,20 @@ export class AuthSessionsService {
         expiresAt,
         updatedAt: new Date(),
       })
-      .where(eq(authSessions.id, id));
+      .where(
+        and(
+          eq(authSessions.id, id),
+          eq(authSessions.refreshTokenId, currentRefreshTokenId),
+          isNull(authSessions.revokedAt),
+          gt(authSessions.expiresAt, new Date()),
+        ),
+      )
+      .returning({ id: authSessions.id });
+
+    return Boolean(rotatedSession);
   }
 
-  async revoke(id: string, reason: string) {
+  async revoke(id: string, reason: SessionRevocationReason) {
     await this.databaseService.db
       .update(authSessions)
       .set({

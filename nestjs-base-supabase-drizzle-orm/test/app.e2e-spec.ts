@@ -1,9 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { sql } from 'drizzle-orm';
 import { AppModule } from '../src/app.module';
 import { DatabaseService } from '../src/database';
+import { configureApp } from '../src/configure-app';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -15,14 +16,7 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('api/v1');
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
+    configureApp(app);
     await app.init();
     databaseService = app.get(DatabaseService);
   });
@@ -55,7 +49,7 @@ describe('AppController (e2e)', () => {
         email,
         password: 'Use-A-Long-Password-123',
       })
-      .expect(200);
+      .expect(201);
   });
 
   it('rejects roles on public registration', async () => {
@@ -69,6 +63,26 @@ describe('AppController (e2e)', () => {
         roles: ['Admin'],
       })
       .expect(400);
+  });
+
+  it('normalizes email identity before login', async () => {
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        email: '  Mixed.Case@example.com  ',
+        firstName: 'Email',
+        lastName: 'Normalization',
+        password: 'Use-A-Long-Password-123',
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({
+        email: 'mixed.case@example.com',
+        password: 'Use-A-Long-Password-123',
+      })
+      .expect(201);
   });
 
   it('blocks regular users from listing users', async () => {
@@ -94,7 +108,7 @@ describe('AppController (e2e)', () => {
 
     await request(app.getHttpServer())
       .post('/api/v1/auth/refresh')
-      .send({ refreshToken: rotatedTokens.body.refreshToken })
+      .send({ refreshToken: rotatedTokens.body.data.refreshToken })
       .expect(401);
   });
 
@@ -123,7 +137,7 @@ describe('AppController (e2e)', () => {
       })
       .expect(201);
 
-    return response.body as {
+    return response.body.data as {
       accessToken: string;
       refreshToken: string;
     };

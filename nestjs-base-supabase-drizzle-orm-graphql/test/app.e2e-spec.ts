@@ -1,9 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { sql } from 'drizzle-orm';
 import { AppModule } from '../src/app.module';
 import { DatabaseService } from '../src/database';
+import { configureApp } from '../src/configure-app';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -15,14 +16,7 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('api/v1');
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
+    configureApp(app);
     await app.init();
     databaseService = app.get(DatabaseService);
   });
@@ -38,11 +32,12 @@ describe('AppController (e2e)', () => {
 
   it('registers and logs in a user', async () => {
     const email = `test-${Date.now()}@example.com`;
+    const registrationEmail = `  ${email.toUpperCase()}  `;
 
     await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({
-        email,
+        email: registrationEmail,
         firstName: 'John',
         lastName: 'Doe',
         password: 'Use-A-Long-Password-123',
@@ -52,14 +47,14 @@ describe('AppController (e2e)', () => {
     const loginResponse = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({
-        email,
+        email: registrationEmail,
         password: 'Use-A-Long-Password-123',
       })
       .expect(200);
 
     await request(app.getHttpServer())
       .post('/api/v1/graphql')
-      .set('authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('authorization', `Bearer ${loginResponse.body.data.accessToken}`)
       .send({
         query: `
           query CurrentUser {
@@ -73,6 +68,22 @@ describe('AppController (e2e)', () => {
       .expect(({ body }) => {
         expect(body.data.me.email).toBe(email);
       });
+  });
+
+  it('returns a conflict for a normalized duplicate registration email', async () => {
+    const email = `duplicate-${Date.now()}@example.com`;
+
+    await registerUser(email);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        email: ` ${email.toUpperCase()} `,
+        firstName: 'Duplicate',
+        lastName: 'User',
+        password: 'Use-A-Long-Password-123',
+      })
+      .expect(409);
   });
 
   it('rejects roles on public registration', async () => {
@@ -111,7 +122,7 @@ describe('AppController (e2e)', () => {
 
     await request(app.getHttpServer())
       .post('/api/v1/auth/refresh')
-      .send({ refreshToken: rotatedTokens.body.refreshToken })
+      .send({ refreshToken: rotatedTokens.body.data.refreshToken })
       .expect(401);
   });
 
@@ -140,7 +151,7 @@ describe('AppController (e2e)', () => {
       })
       .expect(201);
 
-    return response.body as {
+    return response.body.data as {
       accessToken: string;
       refreshToken: string;
     };

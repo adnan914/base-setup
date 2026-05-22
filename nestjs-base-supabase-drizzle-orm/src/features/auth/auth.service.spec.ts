@@ -35,7 +35,7 @@ describe('AuthService', () => {
   let authSessionsService: {
     findById: jest.Mock;
     revoke: jest.Mock;
-    rotate: jest.Mock;
+    rotateIfCurrent: jest.Mock;
   };
 
   beforeEach(() => {
@@ -51,7 +51,7 @@ describe('AuthService', () => {
     authSessionsService = {
       findById: jest.fn(),
       revoke: jest.fn(),
-      rotate: jest.fn(),
+      rotateIfCurrent: jest.fn().mockResolvedValue(true),
     };
 
     service = new AuthService(
@@ -128,7 +128,7 @@ describe('AuthService', () => {
     const tokens = await service.refreshToken({
       refreshToken: previousRefreshToken,
     });
-    const storedHash = authSessionsService.rotate.mock.calls[0][1];
+    const storedHash = authSessionsService.rotateIfCurrent.mock.calls[0][3];
 
     if (typeof storedHash !== 'string') {
       throw new Error('Expected a rotated refresh token hash');

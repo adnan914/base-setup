@@ -14,6 +14,12 @@ export enum Status {
   INACTIVE = 'Inactive',
 }
 
+export enum SessionRevocationReason {
+  LOGOUT = 'logout',
+  PASSWORD_CHANGE = 'password-change',
+  REFRESH_TOKEN_REUSE = 'refresh-token-reuse',
+}
+
 export enum HttpStatus {
   OK = 200,
   CREATED = 201,

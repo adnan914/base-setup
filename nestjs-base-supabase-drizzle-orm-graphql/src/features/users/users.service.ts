@@ -4,25 +4,30 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { and, arrayOverlaps, eq } from 'drizzle-orm';
+import { and, arrayOverlaps, eq, isNull } from 'drizzle-orm';
 import {
   authSessions,
   DatabaseService,
+  isPostgresUniqueViolation,
   PublicUser,
   User,
   users,
 } from '@/database';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Role, Status } from '@/shared/enums';
+import { Role, SessionRevocationReason, Status } from '@/shared/enums';
 import { MESSAGES } from '@/shared/constants';
+import { normalizeEmail } from '@/shared/utils/email.util';
+
+const USERS_EMAIL_CONSTRAINT = 'users_email_idx';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async create(createUserDto: CreateUserDto): Promise<PublicUser> {
-    const { email, password, roles = [Role.USER] } = createUserDto;
+    const { password, roles = [Role.USER] } = createUserDto;
+    const email = normalizeEmail(createUserDto.email);
 
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
@@ -31,19 +36,24 @@ export class UsersService {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const [user] = await this.databaseService.db
-      .insert(users)
-      .values({
-        email,
-        firstName: createUserDto.firstName,
-        lastName: createUserDto.lastName,
-        password: hashedPassword,
-        roles,
-        status: Status.ACTIVE,
-      })
-      .returning();
+    try {
+      const [user] = await this.databaseService.db
+        .insert(users)
+        .values({
+          email,
+          firstName: createUserDto.firstName,
+          lastName: createUserDto.lastName,
+          password: hashedPassword,
+          roles,
+          status: Status.ACTIVE,
+        })
+        .returning();
 
-    return this.toPublicUser(user);
+      return this.toPublicUser(user);
+    } catch (error) {
+      this.throwEmailConflict(error);
+      throw error;
+    }
   }
 
   async findAll(options?: {
@@ -108,7 +118,7 @@ export class UsersService {
     const [user] = await this.databaseService.db
       .select()
       .from(users)
-      .where(eq(users.email, email))
+      .where(eq(users.email, normalizeEmail(email)))
       .limit(1);
 
     return user ?? null;
@@ -119,6 +129,7 @@ export class UsersService {
 
     const values: Partial<User> = {
       ...updateData,
+      email: updateData.email ? normalizeEmail(updateData.email) : undefined,
       updatedAt: new Date(),
     };
 
@@ -126,21 +137,49 @@ export class UsersService {
       values.password = await bcrypt.hash(password, 12);
     }
 
-    const [user] = await this.databaseService.db
-      .update(users)
-      .set(values)
-      .where(eq(users.id, id))
-      .returning();
+    try {
+      if (password) {
+        return await this.databaseService.db.transaction(async (tx) => {
+          const [user] = await tx
+            .update(users)
+            .set(values)
+            .where(eq(users.id, id))
+            .returning();
 
-    if (!user) {
-      throw new NotFoundException(MESSAGES.USER_NOT_FOUND);
+          if (!user) {
+            throw new NotFoundException(MESSAGES.USER_NOT_FOUND);
+          }
+
+          await tx
+            .update(authSessions)
+            .set({
+              revokedAt: new Date(),
+              revokedReason: SessionRevocationReason.PASSWORD_CHANGE,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(eq(authSessions.userId, id), isNull(authSessions.revokedAt)),
+            );
+
+          return this.toPublicUser(user);
+        });
+      }
+
+      const [user] = await this.databaseService.db
+        .update(users)
+        .set(values)
+        .where(eq(users.id, id))
+        .returning();
+
+      if (!user) {
+        throw new NotFoundException(MESSAGES.USER_NOT_FOUND);
+      }
+
+      return this.toPublicUser(user);
+    } catch (error) {
+      this.throwEmailConflict(error);
+      throw error;
     }
-
-    if (password) {
-      await this.revokeSessions(id, 'password-change');
-    }
-
-    return this.toPublicUser(user);
   }
 
   async remove(id: string): Promise<void> {
@@ -154,7 +193,10 @@ export class UsersService {
     }
   }
 
-  async revokeSessions(id: string, reason: string): Promise<void> {
+  async revokeSessions(
+    id: string,
+    reason: SessionRevocationReason,
+  ): Promise<void> {
     await this.databaseService.db
       .update(authSessions)
       .set({
@@ -162,7 +204,7 @@ export class UsersService {
         revokedReason: reason,
         updatedAt: new Date(),
       })
-      .where(eq(authSessions.userId, id));
+      .where(and(eq(authSessions.userId, id), isNull(authSessions.revokedAt)));
   }
 
   async updateLastLogin(id: string): Promise<void> {
@@ -175,5 +217,11 @@ export class UsersService {
   private toPublicUser(user: User): PublicUser {
     const { password: _password, ...publicUser } = user;
     return publicUser;
+  }
+
+  private throwEmailConflict(error: unknown): void {
+    if (isPostgresUniqueViolation(error, USERS_EMAIL_CONSTRAINT)) {
+      throw new ConflictException(MESSAGES.USER_EMAIL_EXISTS);
+    }
   }
 }

@@ -1,21 +1,21 @@
 ---
 name: nestjs-backend-standards
-description: Production backend engineering standards for this NestJS, Supabase, and Drizzle repository. Use when Codex adds, changes, reviews, or documents backend APIs, DTOs, services, guards, database schema, migrations, queries, transactions, configuration, security controls, performance behavior, or tests.
+description: Production backend engineering standards for NestJS REST or GraphQL repositories using Supabase and Drizzle. Use when Codex adds, changes, reviews, or documents backend controllers, resolvers, APIs, schemas, DTOs, GraphQL inputs/object types, services, guards, database schema, migrations, queries, transactions, configuration, security controls, performance behavior, or tests.
 ---
 
 # NestJS Backend Standards
 
-Use the existing project shape first. Read nearby controllers, DTOs, services,
-shared helpers, schema, filters, interceptors, and tests before changing backend
-behavior.
+Use the existing project shape first. Read nearby controllers or resolvers, DTOs
+or GraphQL types, services, shared helpers, schema, filters, interceptors,
+plugins, and tests before changing backend behavior.
 
 ## Work Flow
 
 1. Confirm the user-facing capability and avoid creating an endpoint, table,
    index, helper, or abstraction unless the capability needs it.
-2. Reuse established modules, constants, decorators, DTO patterns, response
-   envelopes, guards, pipes, filters, and Drizzle query patterns before adding
-   new ones.
+2. Reuse established modules, constants, decorators, DTO or GraphQL type
+   patterns, response/error conventions, guards, pipes, filters, plugins, and
+   Drizzle query patterns before adding new ones.
 3. Make the smallest coherent code and schema change that preserves API,
    authorization, database, and operational contracts.
 4. Verify risky assumptions with tests, build, lint, migrations, query shape, or
@@ -23,9 +23,9 @@ behavior.
 
 ## Code Contracts
 
-- Prefer explicit types, DTOs, return types, inferred Drizzle model types, and
-  typed request/session shapes. Avoid `any`, unsafe casts, and loose object
-  bags unless a boundary forces them.
+- Prefer explicit types, DTOs, GraphQL input/object types, return types, inferred
+  Drizzle model types, and typed request/context/session shapes. Avoid `any`,
+  unsafe casts, and loose object bags unless a boundary forces them.
 - Use enums for finite domain values such as roles, statuses, token types, and
   modes. Extend an existing enum when it owns the concept; do not duplicate
   literal unions across modules.
@@ -36,19 +36,25 @@ behavior.
 - Prefer dependency injection and pure reusable helpers over copy-paste logic.
   Add an abstraction only when it removes meaningful duplication or centralizes
   a real policy.
-- Keep controllers thin, services domain-focused, database access bounded, and
-  security checks close to the protected operation.
+- Keep controllers and resolvers thin, services domain-focused, database access
+  bounded, and security checks close to the protected operation.
 
 ## API Standards
 
-- Document every exposed API in Swagger with tag, operation summary, auth
-  requirement, payload DTO, params, queries, success response schema, and
-  relevant error response schemas.
-- Match Swagger to the real response envelope, status code, validation rules,
-  nullable fields, arrays, and authorization behavior. Do not document raw
-  service output when an interceptor wraps it.
+- For REST APIs, document every exposed API in Swagger with tag, operation
+  summary, auth requirement, payload DTO, params, queries, success response
+  schema, and relevant error response schemas.
+- Match REST Swagger to the real response envelope, status code, validation
+  rules, nullable fields, arrays, and authorization behavior. Do not document
+  raw service output when an interceptor wraps it.
+- For GraphQL APIs, keep schema definitions, resolver names, input types, object
+  types, enums, nullability, descriptions where locally used, and error behavior
+  aligned with actual service behavior.
+- Do not add GraphQL queries, mutations, subscriptions, or REST routes unless
+  the product capability requires them.
 - Validate all external input at the boundary. Use DTO validators, whitelist
-  behavior, parser pipes, and explicit optional/required fields.
+  behavior, parser pipes, GraphQL input validation, and explicit
+  optional/required fields.
 - Use consistent success and error contracts. Preserve status-code semantics:
   validation errors, unauthenticated access, forbidden access, missing rows,
   conflicts, throttling, and server faults must stay distinguishable.
@@ -56,6 +62,26 @@ behavior.
   not part of the contract, stack traces, or sensitive authorization details.
 - Add pagination, filtering bounds, rate limits, idempotency handling, or upload
   limits when endpoint behavior can otherwise be abused or grow unbounded.
+
+## GraphQL Standards
+
+- Keep GraphQL playground, sandbox, schema exposure, and introspection
+  production-safe. Reuse validated env flags and default developer tooling off
+  in production unless the deployment intentionally enables it.
+- Apply authentication, authorization, ownership checks, validation, throttling,
+  timeouts, and logging policy to resolvers as deliberately as to REST
+  controllers.
+- Protect GraphQL query cost. Consider pagination, maximum result bounds,
+  batching/DataLoader patterns, selection-driven overfetching, query
+  complexity/depth controls, and subscription lifetime before adding expensive
+  nested fields.
+- Avoid GraphQL N+1 query paths. Review resolver composition and database access
+  when nested relations, lists, or field resolvers are introduced.
+- Never expose password hashes, refresh-token hashes, secrets, internal security
+  state, or fields outside the public GraphQL contract through object types,
+  resolver returns, debug errors, or generated schema.
+- Keep GraphQL error formatting intentional. Do not leak stack traces, database
+  internals, token verification details, or authorization hints through errors.
 
 ## Security
 
@@ -111,8 +137,8 @@ behavior.
 ## Delivery Checklist
 
 - Keep API surface minimal and reusable.
-- Keep constants, enums, types, validation, Swagger, error shape, and tests in
-  sync with behavior.
+- Keep constants, enums, types, validation, REST Swagger or GraphQL schema,
+  error shape, and tests in sync with behavior.
 - Cover authorization, validation, transaction, race, and failure paths in
   proportion to risk.
 - Run focused tests plus build and lint after backend changes. Run migration and

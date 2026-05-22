@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { DatabaseService } from './database.service';
 import { users } from './schema';
 import { Role, Status } from '@/shared/enums';
+import { normalizeEmail } from '@/shared/utils/normalize-email';
 
 dotenv.config();
 dotenv.config({ path: `.env.${process.env.NODE_ENV ?? 'development'}` });
@@ -13,7 +14,9 @@ async function seed() {
   const databaseService = new DatabaseService(new ConfigService());
   const db = databaseService.db;
 
-  const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@example.com';
+  const email = normalizeEmail(
+    process.env.SEED_ADMIN_EMAIL ?? 'admin@example.com',
+  );
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
   const firstName = process.env.SEED_ADMIN_FIRST_NAME ?? 'Admin';
   const lastName = process.env.SEED_ADMIN_LAST_NAME ?? 'User';

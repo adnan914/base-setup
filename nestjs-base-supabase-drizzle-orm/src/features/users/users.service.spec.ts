@@ -51,10 +51,14 @@ describe('UsersService', () => {
     };
     const databaseService = {
       db: {
-        update: jest
-          .fn()
-          .mockReturnValueOnce(userUpdate)
-          .mockReturnValueOnce(sessionUpdate),
+        transaction: jest.fn(async (callback) =>
+          callback({
+            update: jest
+              .fn()
+              .mockReturnValueOnce(userUpdate)
+              .mockReturnValueOnce(sessionUpdate),
+          }),
+        ),
       },
     } as unknown as DatabaseService;
     const usersService = new UsersService(databaseService);
@@ -66,5 +70,6 @@ describe('UsersService', () => {
     expect(sessionUpdate.set).toHaveBeenCalledWith(
       expect.objectContaining({ revokedReason: 'password-change' }),
     );
+    expect(databaseService.db.transaction).toHaveBeenCalled();
   });
 });

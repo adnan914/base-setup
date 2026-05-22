@@ -136,7 +136,8 @@ Readiness:  http://localhost:3000/api/v1/ready
 Swagger:    http://localhost:3000/docs
 ```
 
-Swagger is only exposed when `SWAGGER_ENABLED=true`.
+Swagger is exposed by default outside production. Set `SWAGGER_ENABLED=true`
+explicitly in production when the docs should be reachable there.
 
 ## Environment Variables
 

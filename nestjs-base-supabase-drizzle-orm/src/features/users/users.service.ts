@@ -16,13 +16,20 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { MESSAGES } from '@/shared/constants';
 import { Role, Status } from '@/shared/enums';
+import { normalizeEmail } from '@/shared/utils/normalize-email';
+
+type DatabaseError = {
+  code?: string;
+  constraint?: string;
+};
 
 @Injectable()
 export class UsersService {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async create(createUserDto: CreateUserDto): Promise<PublicUser> {
-    const { email, password, roles = [Role.USER] } = createUserDto;
+    const { password, roles = [Role.USER] } = createUserDto;
+    const email = normalizeEmail(createUserDto.email);
 
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
@@ -31,19 +38,27 @@ export class UsersService {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const [user] = await this.databaseService.db
-      .insert(users)
-      .values({
-        email,
-        firstName: createUserDto.firstName,
-        lastName: createUserDto.lastName,
-        password: hashedPassword,
-        roles,
-        status: Status.ACTIVE,
-      })
-      .returning();
+    try {
+      const [user] = await this.databaseService.db
+        .insert(users)
+        .values({
+          email,
+          firstName: createUserDto.firstName,
+          lastName: createUserDto.lastName,
+          password: hashedPassword,
+          roles,
+          status: Status.ACTIVE,
+        })
+        .returning();
 
-    return this.toPublicUser(user);
+      return this.toPublicUser(user);
+    } catch (error) {
+      if (this.isEmailConflict(error)) {
+        throw new ConflictException(MESSAGES.USER_ALREADY_EXISTS);
+      }
+
+      throw error;
+    }
   }
 
   async findAll(options?: {
@@ -105,10 +120,11 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<User | null> {
+    const normalizedEmail = normalizeEmail(email);
     const [user] = await this.databaseService.db
       .select()
       .from(users)
-      .where(eq(users.email, email))
+      .where(eq(users.email, normalizedEmail))
       .limit(1);
 
     return user ?? null;
@@ -126,6 +142,31 @@ export class UsersService {
       values.password = await bcrypt.hash(password, 12);
     }
 
+    if (password) {
+      return this.databaseService.db.transaction(async (transaction) => {
+        const [user] = await transaction
+          .update(users)
+          .set(values)
+          .where(eq(users.id, id))
+          .returning();
+
+        if (!user) {
+          throw new NotFoundException(MESSAGES.USER_NOT_FOUND);
+        }
+
+        await transaction
+          .update(authSessions)
+          .set({
+            revokedAt: new Date(),
+            revokedReason: 'password-change',
+            updatedAt: new Date(),
+          })
+          .where(eq(authSessions.userId, id));
+
+        return this.toPublicUser(user);
+      });
+    }
+
     const [user] = await this.databaseService.db
       .update(users)
       .set(values)
@@ -134,10 +175,6 @@ export class UsersService {
 
     if (!user) {
       throw new NotFoundException(MESSAGES.USER_NOT_FOUND);
-    }
-
-    if (password) {
-      await this.revokeSessions(id, 'password-change');
     }
 
     return this.toPublicUser(user);
@@ -175,5 +212,14 @@ export class UsersService {
   private toPublicUser(user: User): PublicUser {
     const { password: _password, ...publicUser } = user;
     return publicUser;
+  }
+
+  private isEmailConflict(error: unknown): boolean {
+    const databaseError = error as DatabaseError;
+
+    return (
+      databaseError.code === '23505' &&
+      databaseError.constraint === 'users_email_idx'
+    );
   }
 }

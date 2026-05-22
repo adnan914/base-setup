@@ -1,12 +1,17 @@
 import { IsEmail, IsString, MinLength } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { MESSAGES } from '@/shared/constants';
+import { normalizeEmail } from '@/shared/utils/email.util';
 
 export class LoginDto {
   @ApiProperty({
     description: 'User email address',
     example: 'john.doe@example.com',
   })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? normalizeEmail(value) : value,
+  )
   @IsEmail({}, { message: MESSAGES.EMAIL_VALID })
   email: string;
 

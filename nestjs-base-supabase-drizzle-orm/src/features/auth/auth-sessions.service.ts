@@ -47,13 +47,15 @@ export class AuthSessionsService {
     return Boolean(session);
   }
 
-  async rotate(
+  async rotateIfCurrent(
     id: string,
+    userId: string,
+    currentRefreshTokenId: string,
     refreshTokenHash: string,
     refreshTokenId: string,
     expiresAt: Date,
-  ) {
-    await this.databaseService.db
+  ): Promise<boolean> {
+    const [rotatedSession] = await this.databaseService.db
       .update(authSessions)
       .set({
         refreshTokenHash,
@@ -61,7 +63,18 @@ export class AuthSessionsService {
         expiresAt,
         updatedAt: new Date(),
       })
-      .where(eq(authSessions.id, id));
+      .where(
+        and(
+          eq(authSessions.id, id),
+          eq(authSessions.userId, userId),
+          eq(authSessions.refreshTokenId, currentRefreshTokenId),
+          isNull(authSessions.revokedAt),
+          gt(authSessions.expiresAt, new Date()),
+        ),
+      )
+      .returning({ id: authSessions.id });
+
+    return Boolean(rotatedSession);
   }
 
   async revoke(id: string, reason: string) {

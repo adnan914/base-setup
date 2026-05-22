@@ -8,7 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { PublicUser, User } from '@/database';
-import { Status } from '@/shared/enums';
+import { SessionRevocationReason, Status } from '@/shared/enums';
 import { MESSAGES } from '@/shared/constants';
 import { AuthSessionsService } from './auth-sessions.service';
 
@@ -154,19 +154,28 @@ export class AuthService {
       ) {
         await this.authSessionsService.revoke(
           session.id,
-          'refresh-token-reuse',
+          SessionRevocationReason.REFRESH_TOKEN_REUSE,
         );
         throw new UnauthorizedException(MESSAGES.INVALID_REFRESH_TOKEN);
       }
 
       const tokens = await this.generateTokens(user, session.id);
 
-      await this.authSessionsService.rotate(
+      const rotated = await this.authSessionsService.rotate(
         session.id,
+        payload.jti,
         await bcrypt.hash(tokens.refreshToken, 12),
         tokens.refreshTokenId,
         tokens.refreshTokenExpiresAt,
       );
+
+      if (!rotated) {
+        await this.authSessionsService.revoke(
+          session.id,
+          SessionRevocationReason.REFRESH_TOKEN_REUSE,
+        );
+        throw new UnauthorizedException(MESSAGES.INVALID_REFRESH_TOKEN);
+      }
 
       return {
         accessToken: tokens.accessToken,
@@ -182,7 +191,10 @@ export class AuthService {
       const session = await this.authSessionsService.findById(sessionId);
 
       if (session?.userId === userId) {
-        await this.authSessionsService.revoke(sessionId, 'logout');
+        await this.authSessionsService.revoke(
+          sessionId,
+          SessionRevocationReason.LOGOUT,
+        );
       }
     }
 

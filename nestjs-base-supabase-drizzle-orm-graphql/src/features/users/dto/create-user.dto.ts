@@ -5,15 +5,20 @@ import {
   MinLength,
   IsEnum,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '@/shared/enums';
 import { MESSAGES } from '@/shared/constants';
+import { normalizeEmail } from '@/shared/utils/email.util';
 
 export class CreateUserDto {
   @ApiProperty({
     description: 'User email address',
     example: 'john.doe@example.com',
   })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? normalizeEmail(value) : value,
+  )
   @IsEmail({}, { message: MESSAGES.EMAIL_VALID })
   email: string;
 
