@@ -95,9 +95,9 @@ modules from service modules before sharing them across app surfaces. This is
 why auth has app-specific login/registration controllers and users has a
 service-only module separate from its admin HTTP controller module.
 
-The repository backend skill at `skills/nestjs-backend-standards/SKILL.md`
-captures these REST/GraphQL and Nx multi-API boundary rules for future backend
-changes.
+The repository skills at `skills/nestjs-backend-standards/SKILL.md` and
+`skills/nx-monorepo-standards/SKILL.md` capture these REST/GraphQL backend
+rules and Nx workspace boundary rules for future changes.
 
 ## Prerequisites
 
