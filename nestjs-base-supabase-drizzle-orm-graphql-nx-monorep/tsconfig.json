@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "target": "ES2020",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@/*": ["src/*"],
+      "@/common/*": ["libs/backend/common/src/*"],
+      "@/shared/*": ["libs/backend/common/src/shared/*"],
+      "@/config/*": ["libs/backend/common/src/config/*"],
+      "@/configure-app": ["libs/backend/common/src/configure-app.ts"],
+      "@/app.controller": ["libs/backend/common/src/app.controller.ts"],
+      "@/database": ["libs/backend/database/src/index.ts"],
+      "@/database/*": ["libs/backend/database/src/*"],
+      "@/features/auth": ["libs/backend/auth/src/index.ts"],
+      "@/features/auth/*": ["libs/backend/auth/src/*"],
+      "@/features/users": ["libs/backend/users/src/index.ts"],
+      "@/features/users/*": ["libs/backend/users/src/*"]
+    }
+  }
+}

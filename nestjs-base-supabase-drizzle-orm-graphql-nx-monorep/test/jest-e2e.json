@@ -1,0 +1,23 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "setupFiles": ["<rootDir>/setup-env.ts"],
+  "moduleNameMapper": {
+    "^@/app.controller$": "<rootDir>/../libs/backend/common/src/app.controller.ts",
+    "^@/configure-app$": "<rootDir>/../libs/backend/common/src/configure-app.ts",
+    "^@/database$": "<rootDir>/../libs/backend/database/src/index.ts",
+    "^@/database/(.*)$": "<rootDir>/../libs/backend/database/src/$1",
+    "^@/features/auth$": "<rootDir>/../libs/backend/auth/src/index.ts",
+    "^@/features/auth/(.*)$": "<rootDir>/../libs/backend/auth/src/$1",
+    "^@/features/users$": "<rootDir>/../libs/backend/users/src/index.ts",
+    "^@/features/users/(.*)$": "<rootDir>/../libs/backend/users/src/$1",
+    "^@/shared/(.*)$": "<rootDir>/../libs/backend/common/src/shared/$1",
+    "^@/config/(.*)$": "<rootDir>/../libs/backend/common/src/config/$1",
+    "^@/(.*)$": "<rootDir>/../src/$1"
+  },
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "backend",
+  "projectType": "library",
+  "sourceRoot": "libs/backend/src",
+  "tags": ["scope:shared", "type:lib"]
+}

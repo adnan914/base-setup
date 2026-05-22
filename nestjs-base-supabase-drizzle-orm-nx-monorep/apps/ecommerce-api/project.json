@@ -1,0 +1,21 @@
+{
+  "name": "ecommerce-api",
+  "projectType": "application",
+  "sourceRoot": "apps/ecommerce-api/src",
+  "implicitDependencies": ["backend"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nest build ecommerce-api"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nest start ecommerce-api --watch"
+      }
+    }
+  },
+  "tags": ["scope:ecommerce", "type:app"]
+}
