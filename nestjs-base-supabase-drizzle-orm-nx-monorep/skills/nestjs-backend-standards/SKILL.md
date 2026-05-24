@@ -1,168 +1,341 @@
 ---
 name: nestjs-backend-standards
-description: Production backend engineering standards for NestJS REST or GraphQL repositories using Supabase and Drizzle. Use when Codex adds, changes, reviews, or documents Nx backend API boundaries, controllers, resolvers, APIs, schemas, DTOs, GraphQL inputs/object types, services, guards, database schema, migrations, queries, transactions, configuration, security controls, performance behavior, or tests.
+description: Production backend engineering standards for this NestJS, Supabase, PostgreSQL, and Drizzle repository. Use when Codex adds, changes, reviews, or documents backend APIs, Swagger, DTOs, services, guards, database schema, migrations, queries, transactions, configuration, security controls, performance behavior, caching, observability, or tests.
 ---
 
 # NestJS Backend Standards
 
-Use the existing project shape first. Read nearby controllers or resolvers, DTOs
-or GraphQL types, services, shared helpers, schema, filters, interceptors,
-plugins, and tests before changing backend behavior.
+Use the existing project shape first. Read nearby controllers, DTOs,
+services, guards, decorators, schema, filters, interceptors, and tests before
+changing backend behavior.
 
-## Work Flow
+## Workflow
 
-1. Confirm the user-facing capability and avoid creating an endpoint, table,
-   index, helper, or abstraction unless the capability needs it.
-2. Reuse established modules, constants, decorators, DTO or GraphQL type
-   patterns, response/error conventions, guards, pipes, filters, plugins, and
-   Drizzle query patterns before adding new ones.
-3. Make the smallest coherent code and schema change that preserves API,
-   authorization, database, and operational contracts.
-4. Verify risky assumptions with tests, build, lint, migrations, query shape, or
-   focused manual inspection before finishing.
+1. Confirm the product capability and avoid creating an endpoint, table, index,
+   cache, helper, or abstraction unless it has a clear need.
+2. Reuse established modules, enums, constants, DTOs, response envelopes,
+   guards, pipes, filters, logging, Drizzle patterns, and tests before adding
+   another style.
+3. Keep the smallest coherent change that preserves API, authorization,
+   database, observability, and operational contracts.
+4. Verify high-risk assumptions with tests, build, lint, migrations, query
+   shape, schema inspection, or a focused manual check before finishing.
 
-## Code Contracts
+---
 
-- Prefer explicit types, DTOs, GraphQL input/object types, return types, inferred
-  Drizzle model types, and typed request/context/session shapes. Avoid `any`,
-  unsafe casts, and loose object bags unless a boundary forces them.
-- Use enums for finite domain values such as roles, statuses, token types, and
-  modes. Extend an existing enum when it owns the concept; do not duplicate
-  literal unions across modules.
-- Keep user-facing messages, repeated strings, numeric limits, cache keys,
-  route metadata, status labels, and configuration values out of scattered
-  hardcoded literals. Use shared constants, enums, config, or typed helpers with
-  clear ownership.
-- Prefer dependency injection and pure reusable helpers over copy-paste logic.
-  Add an abstraction only when it removes meaningful duplication or centralizes
-  a real policy.
-- Keep controllers and resolvers thin, services domain-focused, database access
-  bounded, and security checks close to the protected operation.
+## Project Structure
 
-## API Standards
+```
+apps/
+  storefront-api/     # customer-facing API (port 3000) — public register, login, profile
+  admin-api/          # privileged admin API (port 3001) — no public registration
+libs/backend/
+  auth/               # shared JWT/session services + storefront/admin API modules
+  users/              # shared user service + storefront/admin API modules
+  database/           # Drizzle schema, DB service, Supabase service, test DB guard
+  common/             # config, app setup, guards, pipes, filters, logger
+drizzle/              # committed SQL migrations (never edit by hand)
+test/                 # HTTP e2e tests against real TEST_DATABASE_URL
+```
 
-- For REST APIs, document every exposed API in Swagger with tag, operation
-  summary, auth requirement, payload DTO, params, queries, success response
-  schema, and relevant error response schemas.
-- Match REST Swagger to the real response envelope, status code, validation
-  rules, nullable fields, arrays, and authorization behavior. Do not document
-  raw service output when an interceptor wraps it.
-- For GraphQL APIs, keep schema definitions, resolver names, input types, object
-  types, enums, nullability, descriptions where locally used, and error behavior
-  aligned with actual service behavior.
-- Do not add GraphQL queries, mutations, subscriptions, or REST routes unless
-  the product capability requires them.
-- Validate all external input at the boundary. Use DTO validators, whitelist
-  behavior, parser pipes, GraphQL input validation, and explicit
-  optional/required fields.
-- Use consistent success and error contracts. Preserve status-code semantics:
-  validation errors, unauthenticated access, forbidden access, missing rows,
-  conflicts, throttling, and server faults must stay distinguishable.
-- Do not expose passwords, refresh-token hashes, secrets, internal IDs that are
-  not part of the contract, stack traces, or sensitive authorization details.
-- Add pagination, filtering bounds, rate limits, idempotency handling, or upload
-  limits when endpoint behavior can otherwise be abused or grow unbounded.
+Feature services are written once in `libs/backend/<feature>/`. Both
+`storefront/` and `admin/` modules expose only the endpoints appropriate to
+their audience.
 
-## Nx Multi-API Boundaries
+---
 
-- In workspaces with `ecommerce-api` and `admin-api` app surfaces, keep app
-  controllers or resolvers, DTOs or GraphQL contract types, auth entrypoints,
-  Swagger specs, and GraphQL schemas separate when exposure differs.
-- Share domain services, database access, common runtime helpers, validation
-  primitives, and infrastructure modules through libraries. Do not import a
-  controller-bearing module into another API app just to reuse its service;
-  split service modules from transport modules first.
-- Keep public ecommerce auth endpoints out of the admin API unless the product
-  contract explicitly needs them. Keep admin or backoffice routes out of the
-  ecommerce API. Admin login must reject non-admin identities unless a changed
-  auth policy is intentional and covered by tests.
-- Prefer separate Swagger documents for REST app surfaces and separate GraphQL
-  schemas or schema exposure policy for GraphQL app surfaces. Add a gateway or
-  combined docs portal only when edge routing, policy, or operations need it.
-- Keep Nx app-to-library dependencies visible to builds and affected/cached
-  tasks. After changing shared backend libraries, verify both API apps still
-  build and add HTTP/e2e regression coverage for routes that must stay absent
-  from the opposite surface.
+## Naming Conventions
 
-## GraphQL Standards
+| Type | Convention | Example |
+|---|---|---|
+| Files/Folders | kebab-case | `auth-session.service.ts` |
+| Classes | PascalCase | `AuthSessionService` |
+| Methods/Variables | lowerCamelCase | `findByRefreshTokenId()` |
+| Constants | UPPERCASE | `const MAX_LOGIN_ATTEMPTS = 5` |
+| Enums | PascalCase + PascalCase members | `UserRole.Admin` |
+| DTOs | PascalCase + Dto suffix | `CreateUserDto`, `LoginResponseDto` |
 
-- Keep GraphQL playground, sandbox, schema exposure, and introspection
-  production-safe. Reuse validated env flags and default developer tooling off
-  in production unless the deployment intentionally enables it.
-- Apply authentication, authorization, ownership checks, validation, throttling,
-  timeouts, and logging policy to resolvers as deliberately as to REST
-  controllers.
-- Protect GraphQL query cost. Consider pagination, maximum result bounds,
-  batching/DataLoader patterns, selection-driven overfetching, query
-  complexity/depth controls, and subscription lifetime before adding expensive
-  nested fields.
-- Avoid GraphQL N+1 query paths. Review resolver composition and database access
-  when nested relations, lists, or field resolvers are introduced.
-- Never expose password hashes, refresh-token hashes, secrets, internal security
-  state, or fields outside the public GraphQL contract through object types,
-  resolver returns, debug errors, or generated schema.
-- Keep GraphQL error formatting intentional. Do not leak stack traces, database
-  internals, token verification details, or authorization hints through errors.
+---
+
+## Module Pattern
+
+```
+libs/backend/<feature>/
+  src/
+    <feature>.service.ts                   # shared domain service
+    <feature>.module.ts                    # shared providers
+    storefront/
+      storefront-<feature>.module.ts
+      storefront-<feature>.controller.ts
+    admin/
+      admin-<feature>.module.ts
+      admin-<feature>.controller.ts
+    dto/
+      create-<feature>.dto.ts
+      update-<feature>.dto.ts
+```
+
+---
+
+## REST API Standards
+
+### Controller pattern
+
+```ts
+@ApiTags('users')
+@Controller('users')
+export class StorefrontUsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Get('me')
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiEnvelopeResponse({
+    description: 'User profile returned.',
+    message: MESSAGES.DATA_FOUND,
+    status: 200,
+    type: UserResponseDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing token.', type: ApiErrorResponseDto })
+  @Messages(MESSAGES.DATA_FOUND)
+  async getMe(@CurrentUser() user: JwtPayload): Promise<UserResponseDto> {
+    return this.usersService.findById(user.sub);
+  }
+}
+```
+
+- Use `@ApiEnvelopeResponse` (not `@ApiOkResponse`) — it generates correct Swagger for the `{ success, data, message }` response envelope
+- `@Messages(MESSAGES.<KEY>)` sets the envelope message read by `ResponseInterceptor` — always pair it with `@ApiEnvelopeResponse` using the same `MESSAGES` key
+- Use constants from `MESSAGES` — never hardcode message strings inline
+- Document every exposed endpoint: `@ApiTags`, `@ApiOperation`, `@ApiEnvelopeResponse`, all relevant error response decorators, auth requirement, throttling
+- Swagger must match runtime: response shape, status codes, nullable fields, validation rules, actual authorization behavior
+- Validate all input at the boundary — never trust raw request data inside services
+- Do not create broad CRUD endpoints automatically — expose only what the product needs
+
+### DTO pattern
+
+```ts
+export class CreateUserDto {
+  @ApiProperty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(8)
+  password: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  firstName?: string;
+}
+```
+
+- Global pipe enforces `whitelist: true, forbidNonWhitelisted: true` — rely on it
+- Use `@IsOptional()` explicitly; never rely on `undefined` to skip validation
+- All public DTO fields get `@ApiProperty()` or `@ApiPropertyOptional()`
+
+---
 
 ## Security
 
-- Enforce authentication and authorization independently. Verify object-level
-  access for records a user can read or mutate.
-- Keep secrets in validated configuration and never log or return them. Sanitize
-  logs for credentials, tokens, personal data, and database internals.
-- Use parameterized ORM/database APIs; do not build SQL from untrusted strings.
-  Use least-privilege database credentials and preserve SSL or environment
-  security controls.
-- Hash credentials with the existing hardened approach, rotate/revoke session
-  material carefully, and keep authentication failures intentionally vague when
-  detail would help an attacker.
-- Consider CORS, throttling, timeouts, payload size, replay behavior, and
-  injection risks for every externally reachable path.
+### Global guards — do NOT remove from `app.module.ts`
+
+Three guards are active on all routes by default:
+
+```ts
+// Applied globally in app.module.ts providers array
+JwtAuthGuard       // requires valid access token
+RolesGuard         // enforces @Roles() decorator
+ApiThrottlerGuard  // PostgreSQL-backed rate limiting shared across instances
+```
+
+Use `@Public()` to opt a route out of JWT enforcement. Use
+`@Roles(UserRole.Admin)` to restrict to a role.
+
+### Auth session rules
+
+- Access tokens: short-lived, stateless JWT
+- Refresh tokens: stored as **bcrypt hash** in `auth_sessions` — never log or return the raw token
+- Rotation: issue new refresh token on every refresh; revoke the old session record
+- Reuse detection: used/revoked refresh token presented → revoke ALL sessions for that user
+- Password change: revoke ALL user sessions immediately
+
+### What never appears in responses, logs, or errors
+
+- Password hashes
+- Raw refresh tokens or JWT signing secrets
+- Supabase service role key
+- Stack traces (production responses)
+- Internal database error details
+- Auth error detail that helps an attacker enumerate accounts
+
+### Other security controls
+
+- Use parameterized ORM/database APIs — no dynamic SQL from untrusted strings
+- Validate identifiers, URLs, files, callbacks, and third-party inputs
+- Least-privilege DB credentials, preserve SSL, keep Supabase service role key server-only
+- Consider CORS, Helmet, throttling, timeouts, payload sizes, brute force, replay, injection,
+  SSRF, and broken object authorization for every external path
+
+---
 
 ## Database
 
-- Model data with clear ownership and normalized relations by default. Denormalize
-  only for measured read needs or a documented consistency strategy.
-- Add database constraints that protect invariants: primary keys, foreign keys,
-  unique constraints, nullability, defaults, enum/check constraints, and cascade
-  behavior chosen intentionally.
-- Create indexes from real access patterns, joins, uniqueness, ordering, and
-  selective filters. Avoid speculative or overlapping indexes that increase
-  write cost without query value.
-- Keep queries bounded. Select only needed columns where practical, paginate
-  collections, avoid N+1 query flows, and inspect query plans for expensive new
-  paths when data size matters.
-- Use transactions for multi-step changes that must succeed atomically, including
-  coupled writes, balance/state transitions, session rotation, outbox-style
-  handoffs, and read-modify-write flows with consistency risk.
-- Let failed transactions roll back cleanly. Keep transactions short, avoid
-  network calls inside them, and design migration rollback or compensating
-  strategy before destructive schema/data changes.
-- Treat concurrency as part of correctness. Prefer constraints, atomic updates,
-  transaction isolation, or locking strategy over race-prone pre-checks alone.
+### Schema definition
 
-## Runtime Quality
+```ts
+// libs/backend/database/src/schema.ts
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  role: userRoleEnum('role').notNull().default(UserRole.User),
+  status: userStatusEnum('status').notNull().default(UserStatus.Active),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+```
 
-- Watch memory and resource lifetime. Avoid unbounded caches, retained request
-  objects, accumulating event listeners, orphaned timers, unreleased streams,
-  and connection or subscription leaks.
-- Prefer bounded concurrency, timeouts, backpressure, pagination, and streaming
-  where workload size can grow.
-- Optimize after identifying the bottleneck. Protect performance basics first:
-  query count, indexes, payload size, hashing cost, serialization work, and
-  repeated external calls.
-- Keep observability useful: structured logs, request identifiers, actionable
-  errors, and metrics or traces around high-value slow/failure paths when the
-  project supports them.
+- Protect invariants with schema constraints: PK, FK, unique, nullability, defaults,
+  enum/check constraints, and intentional cascade behavior
+- Add indexes for actual access patterns — avoid speculative indexes that add write cost
 
-## Delivery Checklist
+### Migration workflow
 
-- Keep API surface minimal and reusable.
-- Keep constants, enums, types, validation, REST Swagger or GraphQL schema,
-  error shape, and tests in sync with behavior.
-- Cover authorization, validation, transaction, race, and failure paths in
-  proportion to risk.
-- Run focused tests plus build and lint after backend changes. Run migration and
-  query verification when schema or data access changes.
-- State any residual risk, skipped verification, or migration/rollback note in
-  the final answer.
+```bash
+# After every schema change — run in order, commit all three outputs:
+npm run db:generate   # generates SQL in drizzle/
+npm run db:migrate    # applies to dev DB
+# Commit schema.ts change + generated SQL file together in the same commit
+```
+
+Never edit migration SQL files by hand after generation. Review SQL before applying
+to production. Keep rollback or forward-fix strategy ready for destructive migrations.
+
+### Query rules
+
+- Use transactions for atomic multi-step work: session/token rotation, stock/order
+  state transitions, coupled writes, read-modify-write flows
+- Keep transactions short — no network calls inside them
+- Select only necessary columns on hot paths; paginate collections; avoid N+1 flows
+- Treat concurrency as correctness: prefer constraints, atomic updates, idempotency,
+  and transaction isolation over race-prone pre-checks
+
+---
+
+## Code Contracts
+
+- Use explicit TypeScript types at boundaries: DTOs, service return types,
+  request/session context, config objects, query inputs, and
+  integration clients. Avoid `any`, unsafe casts, and loose object bags unless a
+  framework boundary requires them.
+- Use enums for finite domain values: roles, statuses, token types, payment/order
+  states, modes, and event kinds. Extend the enum that owns the concept instead
+  of duplicating string literals.
+- Do not scatter hardcoded messages, secrets, numeric limits, cache keys, feature
+  switches, status labels, or repeated business values — put them in constants,
+  enums, validated configuration, or typed helpers.
+- Keep controllers thin. Keep services modular and domain-focused.
+  Keep persistence details behind database-oriented services.
+- Prefer dependency injection, pure helpers, and composition over copy-paste code.
+  Add an abstraction only when it centralizes a real policy or removes meaningful
+  duplication.
+
+---
+
+## Performance and Runtime
+
+- Start with fundamentals: query count, indexes, bounded payloads, serialization
+  cost, hashing cost, external-call count, connection pooling, and backpressure
+- Cache only when it helps a stable access pattern — define key ownership, TTL,
+  invalidation, authorization scope, and stale-data tolerance before adding it
+- Prefer bounded concurrency, timeouts, retries with backoff for safe operations,
+  and streaming for large data
+- Prevent resource leaks: unbounded in-memory caches, retained request objects,
+  orphaned timers, unclosed DB clients, forgotten subscriptions
+- Build for horizontal scale: stateless request handling, shared rate-limit/session
+  decisions, background jobs for slow non-request work
+
+---
+
+## Observability and Operations
+
+- Use structured logs with request IDs and meaningful context — not a sensitive-data store
+- Make errors actionable for operators while keeping public responses safe
+- Keep readiness/liveness checks meaningful and cheap
+- Validate environment variables at startup; choose secure defaults; document switches
+- Prefer backward-compatible API and migration rollout plans when clients and
+  deployments may overlap
+
+---
+
+## Testing
+
+### Unit test pattern
+
+```ts
+describe('UsersService', () => {
+  let service: UsersService;
+
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        { provide: DatabaseService, useValue: mockDatabaseService },
+      ],
+    }).compile();
+    service = module.get(UsersService);
+  });
+
+  it('returns null for unknown email', async () => {
+    mockDatabaseService.select.mockResolvedValue([]);
+    expect(await service.findByEmail('x@x.com')).toBeNull();
+  });
+});
+```
+
+### E2E test pattern
+
+```ts
+// test/ — always uses TEST_DATABASE_URL, never the dev DB
+beforeAll(async () => {
+  app = await createTestApp();
+  await truncateAuthTables(db);  // clean state before each suite
+});
+
+it('POST /api/v1/auth/login returns tokens', async () => {
+  const res = await request(app.getHttpServer())
+    .post('/api/v1/auth/login')
+    .send({ email: TEST_USER.email, password: TEST_USER.password })
+    .expect(200);
+  expect(res.body.data.accessToken).toBeDefined();
+});
+```
+
+- Unit tests: business decisions, mock DB
+- E2E tests: real `TEST_DATABASE_URL` (database name must contain `test`),
+  truncate tables before each suite
+- Cover: validation errors, unauthenticated access, forbidden roles, ownership
+  isolation, conflicts, failure paths, race/idempotency behavior
+
+### Run commands
+
+```bash
+npm test -- --runInBand                        # unit tests
+
+docker compose up -d db-test
+npm run db:migrate:test
+npm run test:e2e -- --runInBand               # e2e tests
+```
+
+---
+
+## Code Quality Checklist
+
+- [ ] No `console.log` — use injected `Logger` (Winston) with request ID context
+- [ ] All DTOs have `class-validator` decorators + `@ApiProperty()`
+- [ ] All new endpoints use `@ApiEnvelopeResponse` + `@Messages(MESSAGES.<KEY>)` with matching key
+- [ ] All new REST endpoints documented in Swagger with error response decorators
+- [ ] Migration generated and committed alongside schema change
+- [ ] Auth boundary tested: unauthenticated, wrong role, correct role
+- [ ] `npm run build` + `npm run lint` pass before PR

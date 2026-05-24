@@ -15,7 +15,7 @@ describe('Attendance-usersController (e2e)', () => {
   async function obtainUserToken() {
     const loginResponse = await request(app.getHttpServer())
    .post('/users/login')
-        .send({ email: 'jafer@bitcot.com', password: 'NewPassword123!' })
+        .send({ email: 'jafer@test.com', password: 'NewPassword123!' })
     return loginResponse.body.data
   }
     beforeAll(async () => {
@@ -27,7 +27,7 @@ describe('Attendance-usersController (e2e)', () => {
             host: 'localhost',
             port: 5432,
             username: 'postgres',
-            password: 'bitcot',
+            password: 'test@123',
             database: 'nestappTest',
             entities: [User,Attendance,AttendanceUser],
             synchronize: true

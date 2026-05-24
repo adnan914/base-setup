@@ -1,0 +1,4 @@
+interface:
+  display_name: "Caveman Mode"
+  short_description: "Ultra-compressed responses — full accuracy, minimal tokens"
+  default_prompt: "Use $caveman to respond in ultra-compressed caveman style. Drop filler, keep all technical accuracy. Default intensity: full."

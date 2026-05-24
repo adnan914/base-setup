@@ -1,4 +1,4 @@
 interface:
   display_name: "NestJS Backend Standards"
-  short_description: "NestJS API boundary guardrails"
-  default_prompt: "Use $nestjs-backend-standards to implement a NestJS backend change with production-ready API boundaries, database, security, and performance standards."
+  short_description: "Guardrails for production NestJS backends"
+  default_prompt: "Use $nestjs-backend-standards to implement a backend change with production-ready API, database, security, performance, and testing standards."

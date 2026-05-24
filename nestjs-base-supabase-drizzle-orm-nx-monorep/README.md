@@ -96,7 +96,7 @@ why auth has app-specific login/registration controllers and users has a
 service-only module separate from its admin HTTP controller module.
 
 The repository skills at `skills/nestjs-backend-standards/SKILL.md` and
-`skills/nx-monorepo-standards/SKILL.md` capture these REST/GraphQL backend
+`skills/nx-monorepo-standards/SKILL.md` capture these REST backend
 rules and Nx workspace boundary rules for future changes.
 
 ## Prerequisites

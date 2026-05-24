@@ -1,97 +1,99 @@
 ---
 name: nx-monorepo-standards
-description: Nx monorepo engineering standards for this workspace. Use when Codex adds, changes, reviews, documents, or refactors Nx apps, libraries, project.json targets, nx.json inputs or caching, workspace scripts, project graph dependencies, module boundaries, generators, affected commands, CI task execution, or shared code placement.
+description: Nx workspace engineering standards for this NestJS backend monorepo. Use when Codex adds, changes, reviews, or documents Nx apps, libraries, project.json targets, nx.json target defaults or plugins, TypeScript path aliases, project tags or boundaries, build and serve behavior, cache inputs or outputs, workspace scripts, affected execution, or monorepo task verification.
 ---
 
 # Nx Monorepo Standards
 
-Use the existing workspace graph first. Read `nx.json`, relevant `project.json`
-files, root scripts, nearby app and library structure, and CI commands before
-changing Nx configuration or moving code between projects.
+Read the local workspace shape before changing it. Start with `nx.json`,
+nearby `project.json` files, root scripts, TypeScript path mappings, and the
+apps or libraries that own the behavior being changed.
 
-## Work Flow
+## Workflow
 
-1. Confirm whether the change belongs to an app, a shared library, root
-   workspace configuration, or automation around Nx tasks.
-2. Reuse existing project names, tags, targets, script wrappers, TypeScript path
-   patterns, and app-to-library dependency conventions before adding new ones.
-3. Make the smallest coherent Nx change that keeps the project graph explicit,
-   cache behavior understandable, and affected task execution trustworthy.
-4. Verify the changed project targets plus dependent app targets when shared
-   libraries, root inputs, or CI task behavior changed.
+1. Identify whether the change belongs to an application under `apps/`, a
+   reusable library under `libs/`, or shared workspace configuration at the
+   root.
+2. Reuse the nearest existing project shape, target naming, executor style,
+   tags, imports, and scripts before adding a new convention.
+3. Keep project graph changes explicit: project ownership, dependencies,
+   inputs, outputs, cacheability, and build or serve dependencies must stay
+   understandable from Nx configuration.
+4. Verify the smallest relevant Nx task first, then broaden verification when
+   the change affects shared config, more than one project, or build outputs.
 
-## Workspace Ownership
+## Workspace Contracts
 
-- Keep deployable entrypoints in `apps/` and reusable code in `libs/`.
-- Prefer sharing domain, infrastructure, validation, and utility code through
-  libraries instead of app-to-app imports.
-- Keep transport-specific app exposure inside the owning app or a clearly owned
-  transport module. Do not pull admin controllers into ecommerce apps, or the
-  reverse, to reuse service logic.
-- Add a new library only when it has a clear owner and removes a real dependency
-  or reuse problem. Avoid libraries created only to mirror folder names.
-- Preserve project tags and project metadata when they communicate ownership or
-  dependency policy. Extend them deliberately when introducing a new boundary.
+- Treat applications as deployment entry points and libraries as reusable
+  backend capabilities. Do not move domain code into an app just because one app
+  consumes it first.
+- Preserve the current backend library grouping under `libs/backend/` unless a
+  new ownership boundary has a clear reason to live elsewhere.
+- Use project names, `sourceRoot`, `projectType`, and tags consistently with
+  nearby `project.json` files. Keep tags meaningful enough for future boundary
+  rules; do not add decorative tag vocabularies.
+- Prefer importing libraries through the root TypeScript aliases and their
+  public exports. Update `tsconfig.json`, Jest mappings, exports, and consumers
+  together when an alias or library entry point changes.
+- Keep generated build artifacts, coverage, caches, and dependencies outside
+  source ownership. Do not make projects depend on `dist/`, `.nx/`, or
+  `node_modules/` artifacts as source.
 
-## Targets And Inputs
+## Projects and Targets
 
-- Prefer project targets and root scripts that delegate to Nx so task
-  dependencies, caching, and affected execution remain visible.
-- Keep target commands scoped to their owning project. If a target needs root
-  files, generated artifacts, environment files, migrations, or shared config,
-  review target inputs and outputs instead of relying on accidental cache hits.
-- Treat `namedInputs`, cache settings, and output paths as correctness
-  contracts. Change them when task results depend on new files, not just when a
-  cache miss is inconvenient.
-- Avoid broad root inputs that invalidate unrelated projects unless the shared
-  file truly affects them.
-- Keep long-running serve/watch targets separate from build, test, lint,
-  migration, and one-shot verification targets.
+- Use `project.json` for project-level behavior and `nx.json` for workspace
+  defaults or plugins shared across projects.
+- Match existing app targets: this repo builds API apps with the configured
+  webpack command, serves them through Nx node execution, and keeps deploy
+  pruning targets explicit when they produce dist artifacts.
+- Add targets only for repeatable project work. Prefer target defaults for
+  shared cache policy and repeated settings when projects truly share the same
+  contract.
+- Declare target outputs when later targets, CI artifacts, caching, or deploy
+  packaging depend on them. Keep `dependsOn` relationships tight enough to
+  explain execution order without forcing unrelated projects to run.
+- Mark long-running tasks as continuous when Nx needs that knowledge. Do not
+  cache watch, serve, or environment-dependent commands unless their behavior
+  is actually reproducible.
+- Keep root package scripts thin wrappers over Nx when they orchestrate apps or
+  libraries. Avoid inventing a second task graph in shell scripts.
 
-## Graph And Boundaries
+## Graph and Boundary Safety
 
-- Keep app-to-library dependencies visible to the Nx graph. Prefer imports and
-  project configuration that Nx can understand over hidden shell coupling.
-- Check dependents before moving shared files, changing aliases, splitting a
-  library, or changing exported APIs.
-- Do not bypass boundaries with deep imports into another project's internals
-  when a public library entrypoint or a better-owned module is needed.
-- Keep generated code and build output out of source ownership unless the
-  workspace has an explicit generated-source contract.
-- When multiple apps share a library, verify the apps whose runtime contract can
-  change, not only the library unit tests.
+- Inspect affected callers before adding cross-library imports. Prefer moving
+  shared code into the library that owns the abstraction over making feature
+  libraries reach through each other's internals.
+- Avoid deep imports into another project's private folders when an index or
+  deliberate public entry point exists.
+- Keep dependency direction obvious: shared config and common helpers can
+  support feature libraries; applications compose libraries; feature ownership
+  should not be blurred to dodge an import problem.
+- When project tags or lint boundary rules are introduced or changed, update the
+  graph policy and affected imports together. Do not leave tags that promise a
+  boundary the toolchain does not enforce or the code immediately violates.
 
-## Generators And Refactors
+## Caching and Configuration
 
-- Inspect local conventions before using or adding a generator. Keep generated
-  files only when they fit the workspace shape and remove scaffold noise that
-  conflicts with local patterns.
-- Prefer mechanical moves that preserve imports, tests, and project metadata
-  over broad restructures that mix behavior changes with Nx topology changes.
-- Update TypeScript paths, project metadata, docs, CI commands, and tests
-  together when a project rename or library extraction changes developer
-  workflow.
-- Review dependency direction after refactors. Shared libraries should not
-  quietly become app-specific dependency hubs.
+- Treat cache configuration as a correctness contract. Cache builds, tests, and
+  lint only when inputs and outputs describe the work reliably.
+- Review environment reads, generated files, lockfile changes, build outputs,
+  and external side effects before changing target cache behavior.
+- Keep Nx plugin and executor versions aligned with the root dependency set.
+  Check migration impact before changing Nx schema, plugin options, or executor
+  configuration across projects.
+- Prefer root defaults for shared policy and local overrides for real project
+  exceptions. Explain an exception through nearby configuration structure
+  rather than copy-pasting diverging target blocks everywhere.
 
 ## Verification
 
-- Use focused Nx targets for narrow changes and broaden verification when root
-  inputs, shared libraries, or app boundaries changed.
-- For this workspace, shared backend changes should keep both `ecommerce-api`
-  and `admin-api` buildable.
-- When cache configuration is part of the change, run at least one relevant
-  target without relying on a previous cache result.
-- When affected behavior or CI orchestration changes, inspect the project graph
-  assumptions and verify the command shape used by CI or root scripts.
-- State skipped target, cache, graph, or CI verification when it matters to the
-  change.
-
-## Delivery Checklist
-
-- Keep project ownership and import direction clear.
-- Keep Nx targets, named inputs, outputs, cache behavior, root scripts, and CI
-  commands aligned with actual task dependencies.
-- Keep app surface boundaries intact when shared libraries change.
-- Run builds, tests, lint, graph/affected inspection, or uncached target checks
-  in proportion to the Nx blast radius.
+- For a project-local change, run the focused Nx target such as
+  `nx build <project>`, `nx test <project>`, or `nx lint <project>` when that
+  target exists.
+- For shared workspace config, path alias, project graph, or target-default
+  changes, inspect the affected project set and run the relevant build, test,
+  and lint tasks across it.
+- Check app serving behavior when a change touches `serve`, build
+  configurations, ports, runtime entry points, or webpack-backed outputs.
+- State skipped Nx verification, cache assumptions, affected projects, and any
+  new workspace convention in the final handoff.

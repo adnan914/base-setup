@@ -19,7 +19,7 @@ describe('AttendanceController (e2e)', () => {
             host: 'localhost',
             port: 5432,
             username: 'postgres',
-            password: 'bitcot',
+            password: 'test@123',
             database: 'nestappTest',
             entities: [Attendance],
             synchronize: true

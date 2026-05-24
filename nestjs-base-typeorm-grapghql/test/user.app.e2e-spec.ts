@@ -14,14 +14,14 @@ describe('UserController (e2e)', () => {
   async function obtainUserToken() {
     const loginResponse = await request(app.getHttpServer())
    .post('/users/login')
-        .send({ email: 'jafer@bitcot.com', password: 'NewPassword123!' })
+        .send({ email: 'jafer@test.com', password: 'NewPassword123!' })
     return loginResponse.body.data
   }
 
   async function obtainResetPasswordToken() {
     const resetToken = await request(app.getHttpServer())
     .post('/users/password/forgot')
-    .send({ email: 'jafer@bitcot.com' });
+    .send({ email: 'jafer@test.com' });
     return resetToken
   }
 
@@ -34,7 +34,7 @@ describe('UserController (e2e)', () => {
           host: 'localhost',
           port: 5432,
           username: 'postgres',
-          password: 'bitcot',
+          password: 'test@123',
           database: 'nestapp',
           entities: [User],
         }),
@@ -137,7 +137,7 @@ describe('UserController (e2e)', () => {
     it('/login (POST)', async () => {
       return request(app.getHttpServer())
         .post('/users/login')
-        .send({ email: 'jafer@bitcot.com', password: 'NewPassword123!' })
+        .send({ email: 'jafer@test.com', password: 'NewPassword123!' })
         .expect(201)
         .then((response) => {
           expect(response.body.success).toBe(true);
@@ -168,7 +168,7 @@ describe('UserController (e2e)', () => {
     it('Generate reset password link (POST /password/forgot)', async () => {
       const response = await request(app.getHttpServer())
         .post('/users/password/forgot')
-        .send({ email: 'jafer@bitcot.com' });
+        .send({ email: 'jafer@test.com' });
 
       expect(response.body).toEqual({
         success: true,
@@ -178,7 +178,7 @@ describe('UserController (e2e)', () => {
     it('Generate reset password link (POST /password/forgot)', async () => {
       const response = await request(app.getHttpServer())
         .post('/users/password/forgot')
-        .send({ email: 'ritikkumawat@bitcot.co' });
+        .send({ email: 'ritikkumawat@test.co' });
 
       expect(response.body).toEqual({
         success: false,

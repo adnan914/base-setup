@@ -20,7 +20,7 @@ export class EmailService {
   async sendEmailWithTemplate(email: string, body: string): Promise<void> {
     const mail: MailDataRequired = {
       to: email,
-      cc: 'ankitsharam@bitcot.com',
+      cc: 'ankitsharam@test.com',
       from: process.env.SENDGRID_FROM,
       templateId: 'd-7a02fba04b1d45629e1fbf192eea70e9',
       dynamicTemplateData: { body, subject: 'Send Email with template' },

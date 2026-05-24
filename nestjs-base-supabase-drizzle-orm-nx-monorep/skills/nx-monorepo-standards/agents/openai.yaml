@@ -1,4 +1,4 @@
 interface:
   display_name: "Nx Monorepo Standards"
-  short_description: "Nx workspace boundary guardrails"
-  default_prompt: "Use $nx-monorepo-standards to make an Nx workspace change with clear project ownership, targets, caching, affected verification, and app-to-library boundaries."
+  short_description: "Guardrails for Nx workspace changes"
+  default_prompt: "Use $nx-monorepo-standards to change this Nx workspace while preserving project boundaries, targets, caching, and verification."
