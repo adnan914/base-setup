@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package product;
+
+service ProductService {
+  // Reserved for future catalog operations.
+}

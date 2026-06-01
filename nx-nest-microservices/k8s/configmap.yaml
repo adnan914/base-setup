@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecommerce-config
+data:
+  NODE_ENV: production
+  API_GATEWAY_PORT: "3000"
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  NATS_URL: nats://nats:4222
+  JWT_ACCESS_TTL: 900s
+  JWT_REFRESH_TTL: 7d
+  BCRYPT_ROUNDS: "12"
+  RATE_LIMIT_TTL: "60"
+  RATE_LIMIT_LIMIT: "100"

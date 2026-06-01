@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": ["data-source.ts", "migrations/**/*.ts"]
+}

@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "composite": true,
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "outDir": "dist",
+    "paths": {
+      "@ecommerce/common": ["libs/common/src/index.ts"],
+      "@ecommerce/config": ["libs/config/src/index.ts"],
+      "@ecommerce/contracts": ["libs/contracts/src/index.ts"],
+      "@ecommerce/database": ["libs/database/src/index.ts"],
+      "@ecommerce/dto": ["libs/dto/src/index.ts"],
+      "@ecommerce/logger": ["libs/logger/src/index.ts"]
+    },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2021"
+  }
+}

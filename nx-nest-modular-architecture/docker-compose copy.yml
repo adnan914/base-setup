@@ -1,0 +1,128 @@
+services:
+  # ---------------------------------------
+  # 1. DATABASE
+  # ---------------------------------------
+  db:
+    image: postgres:15
+    container_name: focused_db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    ports:
+      - "${DATABASE_EXTERNAL_PORT:-5433}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME} -d ${DATABASE_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - focused_network
+
+  # ---------------------------------------
+  # 2. MIGRATIONS (RUNS ONCE BEFORE SERVICES)
+  # ---------------------------------------
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: focused_migrations
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_HOST: db        # ⬅ IMPORTANT OVERRIDE
+      DATABASE_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-c", "yarn db:setup:prod"]
+    restart: "no"
+    networks:
+      - focused_network
+
+  # ---------------------------------------
+  # 3. AUTH SERVICE
+  # ---------------------------------------
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: auth-service
+    container_name: focused_auth_service
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      AUTH_SERVICE_PORT: ${AUTH_SERVICE_PORT}
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    ports:
+      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
+    networks:
+      - focused_network
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: user-service
+    container_name: focused_user_service
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      USER_SERVICE_PORT: ${USER_SERVICE_PORT}
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    ports:
+      - "${USER_SERVICE_PORT}:${USER_SERVICE_PORT}"
+    networks:
+      - focused_network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: api-gateway
+    container_name: focused_api_gateway
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      GATEWAY_PORT: ${GATEWAY_PORT}
+      AUTH_SERVICE_URL: http://auth-service:${AUTH_SERVICE_PORT}
+      USER_SERVICE_URL: http://user-service:${USER_SERVICE_PORT}
+    depends_on:
+      auth-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+    networks:
+      - focused_network
+
+# ---------------------------------------
+# VOLUMES + NETWORKS
+# ---------------------------------------
+volumes:
+  db_data:
+
+networks:
+  focused_network:
+    driver: bridge

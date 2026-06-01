@@ -1,0 +1,27 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "CommonJS",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@lib/core/database": ["libs/core/database/src/index.ts"],
+      "@lib/core/common": ["libs/core/common/src/index.ts"],
+      "@lib/core/config": ["libs/core/config/src/index.ts"],
+      "@lib/core/contracts": ["libs/core/contracts/src/index.ts"],
+      "@lib/auth/feature-auth": ["libs/auth/feature-auth/src/index.ts"],
+      "@lib/users/feature-users": ["libs/users/feature-users/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "api-gateway",
+  "sourceRoot": "apps/api-gateway/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/api-gateway",
+        "main": "apps/api-gateway/src/main.ts",
+        "tsConfig": "apps/api-gateway/tsconfig.app.json"
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "options": {
+        "buildTarget": "api-gateway:build"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/api-gateway/jest.config.ts"
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "core-database",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/core/database/src",
+  "projectType": "library",
+  "tags": ["type:core", "scope:shared"]
+}
