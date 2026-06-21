@@ -23,6 +23,47 @@ changing backend behavior.
 
 ---
 
+## AI Coding Agent Rules
+
+These rules apply to Claude, Codex, and any other coding agent working in this repository.
+
+### Scope control
+
+- Only modify files directly required for the requested task.
+- Do not refactor unrelated code or change existing behavior unless explicitly requested.
+- Do not touch configuration, infrastructure, database, environment, CI/CD, Docker, or
+  deployment files unless the task specifically requires it.
+- If a requested change can be completed in one file, modify only that file.
+
+### Implementation discipline
+
+- Write the minimum amount of code necessary.
+- Prefer modifying existing code over creating new code.
+- Do not create helpers, abstractions, wrappers, utilities, hooks, classes, or files unless
+  they are genuinely required.
+- Do not add comments, logging, debugging statements, console logs, or print statements
+  unless requested.
+- Follow existing project patterns, naming conventions, and response contracts.
+- Keep backward compatibility whenever possible.
+
+### Change process
+
+- Before editing, identify the exact files that need modification and why each file must
+  change.
+- After analysis, show the list of files that will be modified.
+- Do not edit unrelated files.
+- Never delete, rename, or move code unless necessary for the requested task.
+- Warn before introducing any breaking change.
+
+### Validation
+
+- Verify no unrelated files were changed.
+- Verify no unnecessary code was added.
+- Verify existing functionality remains intact.
+- Run the narrowest meaningful validation for the change when practical.
+
+---
+
 ## Project Structure
 
 ```
