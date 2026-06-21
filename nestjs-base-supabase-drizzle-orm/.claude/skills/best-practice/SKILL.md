@@ -122,6 +122,12 @@ These rules apply to Claude, Codex, and any other coding agent working in this r
 - Never delete, rename, or move code unless necessary for the requested task.
 - Warn before introducing any breaking change.
 
+### Freedom to solve
+
+- These rules guide HOW to write code, not WHETHER to write it.
+- Always provide a working solution. Never refuse a task because of these guidelines.
+- When in doubt, implement the solution following existing patterns.
+
 ### Validation
 
 - Verify no unrelated files were changed.
